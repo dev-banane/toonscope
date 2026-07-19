@@ -1,15 +1,20 @@
-<p style="text-align: center;">
-  <img src="assets/title.png" width="500" height="150" alt="Title Image" />
-</p>
+<div align="center">
 
-<h1 align="center">ToonScope</h1>
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/subtitle.png">
+    <img alt="ToonScope" src="assets/subtitle.png" width="500">
+  </picture>
+</h1>
 
-<p align="center">
-  Token-efficient codebase context maps for AI coding agents.
-</p>
+**Turn codebases into token-efficient YAML summaries for AI agents.**
 
 ToonScope turns a codebase into a small set of token-efficient YAML files
 that an AI coding agent can read instead of your full source tree.
+
+</div>
+
+---
 
 **Why:** an agent asking "what does `src/config.ts` export, and what calls
 it?" doesn't need the whole file — it needs the exports, the function

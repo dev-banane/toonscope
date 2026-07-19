@@ -26,3 +26,9 @@ Thumbs.db
 
 *.tgz
 .npmrc
+
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.cursor/
+.windsurf/
