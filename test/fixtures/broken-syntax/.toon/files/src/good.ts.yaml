@@ -1,0 +1,7 @@
+path: src/good.ts
+type: module
+summary: Module exporting add (2 args).
+exports:
+  functions: [add]
+functions:
+  add: "add(a: number, b: number) => number"

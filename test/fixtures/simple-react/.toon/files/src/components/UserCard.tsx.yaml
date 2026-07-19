@@ -1,0 +1,20 @@
+path: src/components/UserCard.tsx
+type: component
+summary: "React component UserCardProps, UserCard. Uses hooks: useAuth."
+exports:
+  types: [UserCardProps]
+  functions: [UserCard]
+imports:
+  local:
+    - path: src/hooks/useAuth.ts
+      names: [useAuth]
+    - path: src/types/user.ts
+      names: [User]
+    - path: src/utils/format.ts
+      names: [formatDate]
+functions:
+  UserCard: "UserCard(props: UserCardProps) => JSX.Element"
+types:
+  UserCardProps: "{ user: User, onEdit: (id: string) => void, compact?: boolean }"
+uses: [src/hooks/useAuth.ts, src/types/user.ts, src/utils/format.ts]
+used_by: [src/components/UserList.tsx]

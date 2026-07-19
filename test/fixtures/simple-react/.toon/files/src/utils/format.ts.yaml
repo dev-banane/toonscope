@@ -1,0 +1,8 @@
+path: src/utils/format.ts
+type: module
+summary: Module exporting formatDate (1 arg).
+exports:
+  functions: [formatDate]
+functions:
+  formatDate: "formatDate(date: string) => string"
+used_by: [src/components/UserCard.tsx]

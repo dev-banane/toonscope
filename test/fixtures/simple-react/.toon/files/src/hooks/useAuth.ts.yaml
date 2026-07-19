@@ -1,0 +1,18 @@
+path: src/hooks/useAuth.ts
+type: hook
+summary: Custom hook useAuth returning AuthState.
+exports:
+  types: [AuthState]
+  functions: [useAuth]
+imports:
+  local:
+    - path: src/api/auth.ts
+      names: [AuthResponse, Credentials, loginUser, refreshToken]
+    - path: src/types/user.ts
+      names: [User]
+functions:
+  useAuth: useAuth() => AuthState
+types:
+  AuthState: "{ user: User | null, token: string }"
+uses: [src/api/auth.ts, src/types/user.ts]
+used_by: [src/components/UserCard.tsx]

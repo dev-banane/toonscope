@@ -1,0 +1,17 @@
+path: src/components/UserList.tsx
+type: component
+summary: React component UserListProps, UserList.
+exports:
+  types: [UserListProps]
+  functions: [UserList]
+imports:
+  local:
+    - path: src/components/UserCard.tsx
+      names: [UserCard]
+    - path: src/types/user.ts
+      names: [User]
+functions:
+  UserList: "UserList(props: UserListProps) => JSX.Element"
+types:
+  UserListProps: "{ users: User[] }"
+uses: [src/components/UserCard.tsx, src/types/user.ts]

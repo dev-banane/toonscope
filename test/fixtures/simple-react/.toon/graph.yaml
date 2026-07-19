@@ -1,0 +1,5 @@
+edges:
+  src/api/auth.ts: [src/types/user.ts]
+  src/components/UserCard.tsx: [src/hooks/useAuth.ts, src/types/user.ts, src/utils/format.ts]
+  src/components/UserList.tsx: [src/components/UserCard.tsx, src/types/user.ts]
+  src/hooks/useAuth.ts: [src/api/auth.ts, src/types/user.ts]

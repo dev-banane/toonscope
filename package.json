@@ -1,0 +1,76 @@
+{
+  "name": "toonscope",
+  "version": "0.0.1",
+  "description": "Token-efficient codebase context maps for AI coding agents.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "toonscope": "dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "wasm/"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "benchmark": "tsx benchmark/run.ts",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build && npm run test:run"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "agent",
+    "ai-agent",
+    "context",
+    "codebase",
+    "token",
+    "cursor",
+    "claude",
+    "claude-code",
+    "copilot",
+    "windsurf",
+    "gemini",
+    "tree-sitter",
+    "yaml",
+    "cli"
+  ],
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-banane/toonscope"
+  },
+  "bugs": {
+    "url": "https://github.com/dev-banane/toonscope/issues"
+  },
+  "homepage": "https://github.com/dev-banane/toonscope#readme",
+  "author": "dev-banane",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "chokidar": "^5.0.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.3",
+    "fast-glob": "^3.3.3",
+    "figures": "^6.1.0",
+    "log-update": "^7.2.0",
+    "ora": "^9.3.0",
+    "tiktoken": "^1.0.22",
+    "web-tree-sitter": "^0.25.10",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tree-sitter-wasms": "^0.1.13",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

@@ -1,0 +1,384 @@
+{
+  "src/api/auth.ts": {
+    "contentHash": "e02ab4fe10321d3a7a143698399ca2b760ba2a890c99ba5fac66436c77afbb68",
+    "analysisHash": "33139a0eaa4af5a4a1f214a4bd92502e027254ae82ec33f93a6574b7d9abb491",
+    "summary": "Module exporting Credentials, AuthResponse, loginUser, refreshToken (1 arg).",
+    "summarySource": "template",
+    "templateSummary": "Module exporting Credentials, AuthResponse, loginUser, refreshToken (1 arg).",
+    "lastAnalyzed": "2026-07-19T22:21:17.326Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "module",
+      "exports": [
+        {
+          "name": "Credentials",
+          "kind": "interface",
+          "isDefault": false
+        },
+        {
+          "name": "AuthResponse",
+          "kind": "interface",
+          "isDefault": false
+        },
+        {
+          "name": "loginUser",
+          "kind": "function",
+          "isDefault": false
+        },
+        {
+          "name": "refreshToken",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [
+        {
+          "source": "../types/user",
+          "resolvedPath": "src/types/user.ts",
+          "names": [
+            "User"
+          ],
+          "isTypeOnly": true
+        }
+      ],
+      "signatures": [
+        {
+          "name": "loginUser",
+          "kind": "function",
+          "params": [
+            {
+              "name": "creds",
+              "type": "Credentials"
+            }
+          ],
+          "returnType": "Promise<AuthResponse>",
+          "isAsync": true,
+          "isGenerator": false,
+          "isExported": true
+        },
+        {
+          "name": "refreshToken",
+          "kind": "function",
+          "params": [
+            {
+              "name": "token",
+              "type": "string"
+            }
+          ],
+          "returnType": "AuthResponse",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": [
+        {
+          "name": "Credentials",
+          "kind": "interface",
+          "definition": "{ email: string, password: string }",
+          "isExported": true
+        },
+        {
+          "name": "AuthResponse",
+          "kind": "interface",
+          "definition": "{ user: User, token: string, expiresAt: number }",
+          "isExported": true
+        }
+      ]
+    }
+  },
+  "src/utils/format.ts": {
+    "contentHash": "7ad14297d164a57f59f8c0c7344bba6e7e9e5d8c3fd1d107132818258f8ca233",
+    "analysisHash": "1417d27215d17da81079917350ae10fda90c64ec410183e302467ff534b1f74c",
+    "summary": "Module exporting formatDate (1 arg).",
+    "summarySource": "template",
+    "templateSummary": "Module exporting formatDate (1 arg).",
+    "lastAnalyzed": "2026-07-19T22:21:17.327Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "module",
+      "exports": [
+        {
+          "name": "formatDate",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [],
+      "signatures": [
+        {
+          "name": "formatDate",
+          "kind": "function",
+          "params": [
+            {
+              "name": "date",
+              "type": "string"
+            }
+          ],
+          "returnType": "string",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": []
+    }
+  },
+  "src/hooks/useAuth.ts": {
+    "contentHash": "bc8a68620f09c9890e4f0d25b84612616fbdb41607e9610361144820b900e2e6",
+    "analysisHash": "12f0ef3d146c71ed9b17fcfcd67c9b2c075c5895d359240dd3d8f82aa0657d40",
+    "summary": "Custom hook useAuth returning AuthState.",
+    "summarySource": "template",
+    "templateSummary": "Custom hook useAuth returning AuthState.",
+    "lastAnalyzed": "2026-07-19T22:21:17.327Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "hook",
+      "exports": [
+        {
+          "name": "AuthState",
+          "kind": "interface",
+          "isDefault": false
+        },
+        {
+          "name": "useAuth",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [
+        {
+          "source": "../types/user",
+          "resolvedPath": "src/types/user.ts",
+          "names": [
+            "User"
+          ],
+          "isTypeOnly": true
+        },
+        {
+          "source": "../api/auth",
+          "resolvedPath": "src/api/auth.ts",
+          "names": [
+            "loginUser",
+            "refreshToken"
+          ],
+          "isTypeOnly": false
+        },
+        {
+          "source": "../api/auth",
+          "resolvedPath": "src/api/auth.ts",
+          "names": [
+            "Credentials",
+            "AuthResponse"
+          ],
+          "isTypeOnly": true
+        }
+      ],
+      "signatures": [
+        {
+          "name": "useAuth",
+          "kind": "function",
+          "params": [],
+          "returnType": "AuthState",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": [
+        {
+          "name": "AuthState",
+          "kind": "interface",
+          "definition": "{ user: User | null, token: string }",
+          "isExported": true
+        }
+      ]
+    }
+  },
+  "src/components/UserCard.tsx": {
+    "contentHash": "f8813c7b3e024fc92240809270c192a2e5de96ba07ed86293e10f55733c90914",
+    "analysisHash": "4e9ef997750a41bb7e9b317220cf52e41e99b59ff03a5d33bb3789d29d71c5b7",
+    "summary": "React component UserCardProps, UserCard. Uses hooks: useAuth.",
+    "summarySource": "template",
+    "templateSummary": "React component UserCardProps, UserCard. Uses hooks: useAuth.",
+    "lastAnalyzed": "2026-07-19T22:21:17.328Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "component",
+      "exports": [
+        {
+          "name": "UserCardProps",
+          "kind": "interface",
+          "isDefault": false
+        },
+        {
+          "name": "UserCard",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [
+        {
+          "source": "../types/user",
+          "resolvedPath": "src/types/user.ts",
+          "names": [
+            "User"
+          ],
+          "isTypeOnly": true
+        },
+        {
+          "source": "../hooks/useAuth",
+          "resolvedPath": "src/hooks/useAuth.ts",
+          "names": [
+            "useAuth"
+          ],
+          "isTypeOnly": false
+        },
+        {
+          "source": "../utils/format",
+          "resolvedPath": "src/utils/format.ts",
+          "names": [
+            "formatDate"
+          ],
+          "isTypeOnly": false
+        }
+      ],
+      "signatures": [
+        {
+          "name": "UserCard",
+          "kind": "function",
+          "params": [
+            {
+              "name": "props",
+              "type": "UserCardProps"
+            }
+          ],
+          "returnType": "JSX.Element",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": [
+        {
+          "name": "UserCardProps",
+          "kind": "interface",
+          "definition": "{ user: User, onEdit: (id: string) => void, compact?: boolean }",
+          "isExported": true
+        }
+      ]
+    }
+  },
+  "src/components/UserList.tsx": {
+    "contentHash": "0bd6a6351e56eba6027208c9932cb3a65a7e15da37264f4b3e58de96087e1b59",
+    "analysisHash": "4d5bc886ad332b370ec04e4e299cf3ea7a6544f63f2ab6d66041f7aa1ad79a2b",
+    "summary": "React component UserListProps, UserList.",
+    "summarySource": "template",
+    "templateSummary": "React component UserListProps, UserList.",
+    "lastAnalyzed": "2026-07-19T22:21:17.328Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "component",
+      "exports": [
+        {
+          "name": "UserListProps",
+          "kind": "interface",
+          "isDefault": false
+        },
+        {
+          "name": "UserList",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [
+        {
+          "source": "../types/user",
+          "resolvedPath": "src/types/user.ts",
+          "names": [
+            "User"
+          ],
+          "isTypeOnly": true
+        },
+        {
+          "source": "./UserCard",
+          "resolvedPath": "src/components/UserCard.tsx",
+          "names": [
+            "UserCard"
+          ],
+          "isTypeOnly": false
+        }
+      ],
+      "signatures": [
+        {
+          "name": "UserList",
+          "kind": "function",
+          "params": [
+            {
+              "name": "props",
+              "type": "UserListProps"
+            }
+          ],
+          "returnType": "JSX.Element",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": [
+        {
+          "name": "UserListProps",
+          "kind": "interface",
+          "definition": "{ users: User[] }",
+          "isExported": true
+        }
+      ]
+    }
+  },
+  "src/types/user.ts": {
+    "contentHash": "1e09c958ab072888c71ebcac5bab8e9670391351a6e0125e7e3707c743a6b09b",
+    "analysisHash": "956fdb25a34e4a140d8728d8dc28d82a56b48c58dcac6bbe0f2b68a920dc58c6",
+    "summary": "Type definitions: Role, User.",
+    "summarySource": "template",
+    "templateSummary": "Type definitions: Role, User.",
+    "lastAnalyzed": "2026-07-19T22:21:17.329Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "types",
+      "exports": [
+        {
+          "name": "Role",
+          "kind": "type",
+          "isDefault": false
+        },
+        {
+          "name": "User",
+          "kind": "interface",
+          "isDefault": false
+        }
+      ],
+      "imports": [],
+      "signatures": [],
+      "types": [
+        {
+          "name": "Role",
+          "kind": "type",
+          "definition": "'admin' | 'editor' | 'viewer'",
+          "isExported": true
+        },
+        {
+          "name": "User",
+          "kind": "interface",
+          "definition": "{ id: string, name: string, email: string, role: Role, bio?: string }",
+          "isExported": true
+        }
+      ]
+    }
+  }
+}

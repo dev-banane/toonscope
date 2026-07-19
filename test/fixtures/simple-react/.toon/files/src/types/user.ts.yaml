@@ -1,0 +1,9 @@
+path: src/types/user.ts
+type: types
+summary: "Type definitions: Role, User."
+exports:
+  types: [Role, User]
+types:
+  Role: "'admin' | 'editor' | 'viewer'"
+  User: "{ id: string, name: string, email: string, role: Role, bio?: string }"
+used_by: [src/api/auth.ts, src/components/UserCard.tsx, src/components/UserList.tsx, src/hooks/useAuth.ts]

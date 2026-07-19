@@ -1,0 +1,26 @@
+project: simple-react
+generated: 2026-07-19T22:21:17.330Z
+stats:
+  files: 6
+  total_tokens: 1113
+  raw_tokens: 536
+  reduction: -107.6%
+files:
+  src/api/auth.ts:
+    summary: Module exporting Credentials, AuthResponse, loginUser, refr…
+    exports: [Credentials, AuthResponse, loginUser, refreshToken]
+  src/components/UserCard.tsx:
+    summary: "React component UserCardProps, UserCard. Uses hooks: useAut…"
+    exports: [UserCardProps, UserCard]
+  src/components/UserList.tsx:
+    summary: React component UserListProps, UserList.
+    exports: [UserListProps, UserList]
+  src/hooks/useAuth.ts:
+    summary: Custom hook useAuth returning AuthState.
+    exports: [AuthState, useAuth]
+  src/types/user.ts:
+    summary: "Type definitions: Role, User."
+    exports: [Role, User]
+  src/utils/format.ts:
+    summary: Module exporting formatDate (1 arg).
+    exports: [formatDate]

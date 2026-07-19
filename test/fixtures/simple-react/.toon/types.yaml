@@ -1,0 +1,4 @@
+User:
+  defined_in: src/types/user.ts
+  used_by: [auth, UserCard, UserList, useAuth]
+  definition: "{ id: string, name: string, email: string, role: Role, bio?: string }"

@@ -1,0 +1,11 @@
+project: broken-syntax
+generated: 2026-07-19T22:21:16.389Z
+stats:
+  files: 1
+  total_tokens: 128
+  raw_tokens: 41
+  reduction: -212.2%
+files:
+  src/good.ts:
+    summary: Module exporting add (2 args).
+    exports: [add]

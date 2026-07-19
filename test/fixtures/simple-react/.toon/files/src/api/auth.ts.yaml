@@ -1,0 +1,18 @@
+path: src/api/auth.ts
+type: module
+summary: Module exporting Credentials, AuthResponse, loginUser, refreshToken (1 arg).
+exports:
+  types: [Credentials, AuthResponse]
+  functions: [loginUser, refreshToken]
+imports:
+  local:
+    - path: src/types/user.ts
+      names: [User]
+functions:
+  loginUser: "async loginUser(creds: Credentials) => Promise<AuthResponse>"
+  refreshToken: "refreshToken(token: string) => AuthResponse"
+types:
+  Credentials: "{ email: string, password: string }"
+  AuthResponse: "{ user: User, token: string, expiresAt: number }"
+uses: [src/types/user.ts]
+used_by: [src/hooks/useAuth.ts]

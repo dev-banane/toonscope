@@ -1,0 +1,44 @@
+{
+  "src/good.ts": {
+    "contentHash": "9a30ac96b5d5c1b67eca69e1e2cf0798817d9578c8d7d904a81a67b983b35cba",
+    "analysisHash": "28e9daed9e1bda309caf61bfbdb0197f04adf76102c260439076eea35be45517",
+    "summary": "Module exporting add (2 args).",
+    "summarySource": "template",
+    "templateSummary": "Module exporting add (2 args).",
+    "lastAnalyzed": "2026-07-19T22:21:16.358Z",
+    "analyzerVersion": "7",
+    "analysis": {
+      "language": "typescript",
+      "type": "module",
+      "exports": [
+        {
+          "name": "add",
+          "kind": "function",
+          "isDefault": false
+        }
+      ],
+      "imports": [],
+      "signatures": [
+        {
+          "name": "add",
+          "kind": "function",
+          "params": [
+            {
+              "name": "a",
+              "type": "number"
+            },
+            {
+              "name": "b",
+              "type": "number"
+            }
+          ],
+          "returnType": "number",
+          "isAsync": false,
+          "isGenerator": false,
+          "isExported": true
+        }
+      ],
+      "types": []
+    }
+  }
+}
