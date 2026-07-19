@@ -34,7 +34,7 @@ export async function applyIncrementalUpdate(params: {
     .join('/');
   if (!fs.existsSync(changedAbsPath)) return;
 
-  const cache = loadCache(projectRoot);
+  const cache = loadCache(outputDir);
   const prev = cache[relPath];
   const next = await analyzeFile({
     projectRoot,
@@ -59,7 +59,7 @@ export async function applyIncrementalUpdate(params: {
       types: next.types,
     },
   };
-  saveCache(projectRoot, cache);
+  saveCache(outputDir, cache);
 
   writeFileyaml(outputDir, next);
 

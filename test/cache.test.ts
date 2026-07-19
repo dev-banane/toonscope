@@ -9,8 +9,7 @@ describe('Cache', () => {
     const projectRoot = fixtureRoot('simple-react');
     const config = defaultTestConfig(projectRoot);
 
-    const cachePath = path.join(projectRoot, '.toon', 'cache.json');
-    fs.rmSync(cachePath, { force: true });
+    const cachePath = path.join(config.output, 'cache.json');
 
     await generateContext(projectRoot, config);
     const firstRaw = fs.readFileSync(cachePath, 'utf8');
@@ -36,8 +35,7 @@ describe('Cache', () => {
     const projectRoot = fixtureRoot('simple-react');
     const config = defaultTestConfig(projectRoot);
 
-    const cachePath = path.join(projectRoot, '.toon', 'cache.json');
-    fs.rmSync(cachePath, { force: true });
+    const cachePath = path.join(config.output, 'cache.json');
 
     await generateContext(projectRoot, config);
     const warm = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as any;

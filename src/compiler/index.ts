@@ -49,13 +49,17 @@ export async function generateContext(
       : `${normalizeProviderId(config.ai!.provider)}:${effectiveModel(config.ai!)}`
     : undefined;
 
+  const outputDir = path.isAbsolute(config.output)
+    ? config.output
+    : path.join(projectRoot, config.output);
+
   const absFiles = await listSourceFiles(
     projectRoot,
     config.include,
     config.exclude,
     config.languages
   );
-  const cache = options?.force ? {} : loadCache(projectRoot);
+  const cache = options?.force ? {} : loadCache(outputDir);
 
   const analyses: FileAnalysis[] = [];
   const tasks: RunnerTask[] = [];
@@ -239,9 +243,6 @@ export async function generateContext(
     );
   }
   const generatedISO = new Date().toISOString();
-  const outputDir = path.isAbsolute(config.output)
-    ? config.output
-    : path.join(projectRoot, config.output);
   options?.onPhase?.('write');
   const splitResult = writeSplitContext({
     projectRoot,
@@ -281,6 +282,6 @@ export async function generateContext(
     types: Object.fromEntries(sharedTypes.map((t) => [t.name, t.definition])),
   };
 
-  saveCache(projectRoot, cache);
+  saveCache(outputDir, cache);
   return ctx;
 }

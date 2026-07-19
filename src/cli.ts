@@ -185,6 +185,18 @@ function syncGitignore(projectRoot: string): void {
   fs.appendFileSync(gitignorePath, `${prefix}${entry}\n`, 'utf8');
 }
 
+function addToGitignore(projectRoot: string, entries: string[]): void {
+  const gitignorePath = path.join(projectRoot, '.gitignore');
+  const raw = fs.existsSync(gitignorePath)
+    ? fs.readFileSync(gitignorePath, 'utf8')
+    : '';
+  const existing = new Set(raw.split(/\r?\n/).map((line) => line.trim()));
+  const toAdd = entries.filter((entry) => !existing.has(entry));
+  if (toAdd.length === 0) return;
+  const prefix = raw.length === 0 || raw.endsWith('\n') ? '' : '\n';
+  fs.appendFileSync(gitignorePath, `${prefix}${toAdd.join('\n')}\n`, 'utf8');
+}
+
 async function runGenerate(params: {
   projectRoot: string;
   config: ToonConfig;
@@ -682,6 +694,26 @@ program
             );
           }
           console.log('');
+        }
+
+        const writtenResults = results.filter((r) => r.action !== 'skipped');
+        if (writtenResults.length > 0) {
+          const shouldGitignoreIntegrations = await promptYesNo(
+            '  Add generated integration files (AGENTS.md, CLAUDE.md, etc.) to .gitignore? (y/N) ',
+            false
+          );
+          if (shouldGitignoreIntegrations) {
+            const entries = writtenResults.map(
+              (r) =>
+                `/${path.relative(projectRoot, r.path).split(path.sep).join('/')}`
+            );
+            addToGitignore(projectRoot, entries);
+            if (!ro.quiet && !ro.json) {
+              console.log(
+                `  Added ${entries.length} integration file(s) to .gitignore.\n`
+              );
+            }
+          }
         }
       }
 

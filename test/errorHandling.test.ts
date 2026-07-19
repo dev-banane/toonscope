@@ -9,10 +9,7 @@ describe('resilience to unparseable source files', () => {
   const config = defaultTestConfig(projectRoot);
 
   beforeEach(() => {
-    fs.rmSync(path.join(projectRoot, '.toon'), {
-      recursive: true,
-      force: true,
-    });
+    fs.rmSync(config.output, { recursive: true, force: true });
   });
 
   it('analyzeFile degrades gracefully instead of throwing on invalid syntax', async () => {

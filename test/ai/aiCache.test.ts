@@ -88,8 +88,7 @@ describe('AI summary cache', () => {
     await generateContext(projectRoot, config, { summarize: true });
 
     const filePath = path.join(
-      projectRoot,
-      '.toon',
+      config.output,
       'files',
       'src/utils/format.ts.yaml'
     );

@@ -18,6 +18,9 @@ export async function buildProjectGraph(params: {
   useCache?: boolean;
 }): Promise<DependencyGraph> {
   const { projectRoot, config, useCache = true } = params;
+  const outputDir = path.isAbsolute(config.output)
+    ? config.output
+    : path.join(projectRoot, config.output);
 
   const relFiles = await listSourceFiles(
     projectRoot,
@@ -25,7 +28,7 @@ export async function buildProjectGraph(params: {
     config.exclude,
     config.languages
   );
-  const cache = useCache ? loadCache(projectRoot) : {};
+  const cache = useCache ? loadCache(outputDir) : {};
 
   const analyses: FileAnalysis[] = [];
 
@@ -79,6 +82,6 @@ export async function buildProjectGraph(params: {
   }
 
   const graph = buildDepGraph(analyses);
-  if (useCache) saveCache(projectRoot, cache);
+  if (useCache) saveCache(outputDir, cache);
   return graph;
 }

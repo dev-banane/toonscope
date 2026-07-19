@@ -27,8 +27,8 @@ export type ToonCache = Record<string, CacheEntry>;
 
 export const CACHE_ANALYZER_VERSION = '7';
 
-export function cachePath(projectRoot: string) {
-  return path.join(projectRoot, '.toon', 'cache.json');
+export function cachePath(outputDir: string) {
+  return path.join(outputDir, 'cache.json');
 }
 
 export function computeAnalysisHash(analysis: FileAnalysis): string {
@@ -42,8 +42,8 @@ export function computeAnalysisHash(analysis: FileAnalysis): string {
   return sha256Hex(JSON.stringify(payload));
 }
 
-export function loadCache(projectRoot: string): ToonCache {
-  const p = cachePath(projectRoot);
+export function loadCache(outputDir: string): ToonCache {
+  const p = cachePath(outputDir);
   if (!fs.existsSync(p)) return {};
   try {
     const raw = fs.readFileSync(p, 'utf8');
@@ -53,8 +53,8 @@ export function loadCache(projectRoot: string): ToonCache {
   }
 }
 
-export function saveCache(projectRoot: string, cache: ToonCache): void {
-  const p = cachePath(projectRoot);
+export function saveCache(outputDir: string, cache: ToonCache): void {
+  const p = cachePath(outputDir);
   fs.mkdirSync(path.dirname(p), { recursive: true });
   writeFileSyncRetrying(p, JSON.stringify(cache, null, 2));
 }

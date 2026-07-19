@@ -11,8 +11,6 @@ describe('yaml compiler', () => {
   it('supports a host-provided AI summarizer without package-level credentials', async () => {
     const projectRoot = fixtureRoot('simple-react');
     const config = defaultTestConfig(projectRoot);
-    const cachePath = path.join(projectRoot, '.toon', 'cache.json');
-    fs.rmSync(cachePath, { force: true });
     let calls = 0;
 
     const ctx = await generateContext(projectRoot, config, {
@@ -42,11 +40,10 @@ describe('yaml compiler', () => {
     expect(ctx.graph).toBeTruthy();
     expect(ctx.types).toBeTruthy();
 
-    const indexPath = path.join(projectRoot, config.output, 'index.yaml');
-    const graphPath = path.join(projectRoot, config.output, 'graph.yaml');
-    const typesPath = path.join(projectRoot, config.output, 'types.yaml');
+    const indexPath = path.join(config.output, 'index.yaml');
+    const graphPath = path.join(config.output, 'graph.yaml');
+    const typesPath = path.join(config.output, 'types.yaml');
     const filePath = path.join(
-      projectRoot,
       config.output,
       'files',
       'src/components/UserCard.tsx.yaml'
@@ -90,7 +87,7 @@ describe('yaml compiler', () => {
       rawTokens += countTokens(readTextFile(path.join(projectRoot, relPath)));
     }
 
-    const toonDir = path.join(projectRoot, config.output);
+    const toonDir = config.output;
     const toonYamlFiles = collectYamlFiles(toonDir);
     const toonTokens = toonYamlFiles.reduce(
       (sum, p) => sum + countTokens(fs.readFileSync(p, 'utf8')),

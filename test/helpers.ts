@@ -1,3 +1,5 @@
+import os from 'node:os';
+import fs from 'node:fs';
 import path from 'node:path';
 import type { ToonConfig } from '../src/types';
 
@@ -17,7 +19,7 @@ export function defaultTestConfig(projectRoot: string): ToonConfig {
       '**/.venv/**',
       '**/venv/**',
     ],
-    output: '.toon',
+    output: fs.mkdtempSync(path.join(os.tmpdir(), 'toonscope-test-')),
     defaultDepth: 2,
     languages: ['typescript', 'javascript', 'python'],
     splitThreshold: 15,
