@@ -42,7 +42,7 @@ export class GoogleProvider implements AIProvider {
         systemInstruction: { parts: [{ text: system }] },
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 512,
+          maxOutputTokens: 2048,
           responseMimeType: 'application/json',
         },
       }),

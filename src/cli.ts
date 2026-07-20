@@ -56,12 +56,18 @@ program
   .description('Codebase context compiler for AI tools.')
   .version(packageJson.version);
 
-const SUPPORTED_KEY_PROVIDERS = ['google', 'anthropic', 'openai'] as const;
+const SUPPORTED_KEY_PROVIDERS = [
+  'google',
+  'anthropic',
+  'openai',
+  'mistral',
+] as const;
 const SUPPORTED_AI_PROVIDERS = [
   'google',
   'anthropic',
   'openai',
   'ollama',
+  'mistral',
 ] as const;
 
 function renderFlags(opts: any): RenderOptions {
@@ -577,7 +583,7 @@ program
       if (wantAI) {
         const providerAnswer = (
           await promptText(
-            '  Provider (google/anthropic/openai/ollama) [google]: ',
+            '  Provider (google/anthropic/openai/ollama/mistral) [google]: ',
             'google'
           )
         ).toLowerCase();
@@ -782,7 +788,7 @@ program
   .option('--summarize', 'Enable optional LLM summarization if configured')
   .option(
     '--provider <provider>',
-    'AI provider for --summarize: google, anthropic, openai, or ollama'
+    'AI provider for --summarize: google, anthropic, openai, ollama, or mistral'
   )
   .option('--model <model>', 'Override the AI model for --summarize')
   .option(

@@ -19,6 +19,7 @@ import {
 import { createProvider, effectiveModel, normalizeProviderId } from '../ai';
 import type { AIProvider } from '../ai';
 import { runSummarization, type RunnerTask } from '../ai/runner';
+import { MAX_UNDOCUMENTED_FUNCTIONS_PER_REQUEST } from '../ai/prompts';
 
 export async function generateContext(
   projectRoot: string,
@@ -166,7 +167,8 @@ export async function generateContext(
       if (useAI && !usedCachedAi && provider) {
         const undocumentedFunctions = analysis.signatures
           .filter((s) => !s.doc)
-          .map((s) => s.name);
+          .map((s) => s.name)
+          .slice(0, MAX_UNDOCUMENTED_FUNCTIONS_PER_REQUEST);
         tasks.push({
           path: relPath,
           request: {

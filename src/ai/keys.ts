@@ -2,7 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-export type AIProviderId = 'google' | 'anthropic' | 'openai' | 'ollama';
+export type AIProviderId =
+  | 'google'
+  | 'anthropic'
+  | 'openai'
+  | 'ollama'
+  | 'mistral';
 
 export function normalizeProviderId(provider: string): string {
   return provider === 'gemini' ? 'google' : provider;
@@ -12,6 +17,7 @@ const ENV_VAR_CANDIDATES: Record<string, string[]> = {
   google: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
   anthropic: ['ANTHROPIC_API_KEY'],
   openai: ['OPENAI_API_KEY'],
+  mistral: ['MISTRAL_API_KEY'],
 };
 
 export function userConfigPath(homeDir: string = os.homedir()): string {

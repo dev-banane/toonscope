@@ -31,6 +31,8 @@ export const SYSTEM_PROMPT = [
 
 const MAX_EXCERPT_CHARS = 6000;
 
+export const MAX_UNDOCUMENTED_FUNCTIONS_PER_REQUEST = 30;
+
 export function capExcerpt(text: string, max = MAX_EXCERPT_CHARS): string {
   if (text.length <= max) return text;
   const headLen = Math.ceil(max * 0.6);
@@ -145,6 +147,13 @@ function firstTwoSentences(text: string): string {
   return sentences.slice(0, 2).join(' ').trim();
 }
 
+function extractSummaryFromTruncatedJson(cleaned: string): string | null {
+  const match = cleaned.match(/"summary"\s*:\s*"((?:\\.|[^"\\])*)/);
+  if (!match) return null;
+  const value = match[1].replace(/\\(.)/g, '$1').trim();
+  return value || null;
+}
+
 export function parseAIResponse(
   raw: string,
   undocumentedFunctions: string[] = []
@@ -174,8 +183,11 @@ export function parseAIResponse(
       return functionDocs ? { summary, functionDocs } : { summary };
     }
   } catch {
-    /* fall through to raw-text fallback below */
+    /* fall through to recovery below — likely a truncated JSON response */
   }
+
+  const recovered = extractSummaryFromTruncatedJson(cleaned);
+  if (recovered) return { summary: recovered };
 
   return { summary: firstTwoSentences(raw) || raw.trim() };
 }

@@ -65,7 +65,7 @@ API key, no network call. If you want more readable prose summaries, an LLM
 can generate them instead:
 
 ```bash
-npx toonscope key set google      # or: anthropic, openai — stores the key at
+npx toonscope key set google      # or: anthropic, openai, mistral — stores the key at
                                    # ~/.config/toonscope/config.json, never in the repo
 npx toonscope generate --summarize
 ```
@@ -75,6 +75,7 @@ npx toonscope generate --summarize
 | `google`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | `gemini-2.5-flash`  |
 | `anthropic` | `ANTHROPIC_API_KEY`                 | `claude-haiku-4-5`  |
 | `openai`    | `OPENAI_API_KEY`                    | `gpt-4.1-mini`      |
+| `mistral`   | `MISTRAL_API_KEY`                   | `mistral-small-latest` |
 | `ollama`    | *(none — local)*                    | `llama3.2`          |
 
 Key resolution order: `--api-key` flag → provider env var (or generic
@@ -110,7 +111,7 @@ languages: [typescript, javascript, python] # which analyzers run
 splitThreshold: 15 # a directory with more files than this gets its own index/*.yaml sub-index
 gitignoreToon: true # `init` ensures /.toon/ is gitignored when true; other commands never touch .gitignore
 ai: # omit entirely to use only template summaries
-  provider: google # google | anthropic | openai | ollama
+  provider: google # google | anthropic | openai | ollama | mistral
   model: gemini-2.5-flash # optional override
   concurrency: 8 # optional, parallel summarization requests
   ollamaUrl: http://localhost:11434 # ollama only

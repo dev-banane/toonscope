@@ -96,4 +96,23 @@ describe('parseAIResponse', () => {
     expect(() => parseAIResponse('', [])).not.toThrow();
     expect(parseAIResponse('', []).summary).toBe('');
   });
+
+  it('recovers the summary text from JSON truncated mid-response', () => {
+    const result = parseAIResponse(
+      '{"summary": "This module implements the CLI entry point and wires up',
+      []
+    );
+    expect(result.summary).toBe(
+      'This module implements the CLI entry point and wires up'
+    );
+    expect(result.functionDocs).toBeUndefined();
+  });
+
+  it('does not fabricate function docs when truncated before a summary field appears', () => {
+    const result = parseAIResponse(
+      '{"functions":{"foo":"partial doc that never clo',
+      ['foo']
+    );
+    expect(result.functionDocs).toBeUndefined();
+  });
 });

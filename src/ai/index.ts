@@ -12,6 +12,7 @@ import { GoogleProvider } from './google';
 import { AnthropicProvider } from './anthropic';
 import { OpenAIProvider } from './openai';
 import { OllamaProvider } from './ollama';
+import { MistralProvider } from './mistral';
 
 export interface SummarizeFileRequest {
   path: string;
@@ -42,6 +43,7 @@ const DEFAULT_MODELS: Record<string, string> = {
   anthropic: 'claude-haiku-4-5',
   openai: 'gpt-4.1-mini',
   ollama: 'llama3.2',
+  mistral: 'mistral-small-latest',
 };
 
 export function effectiveModel(config: NonNullable<ToonConfig['ai']>): string {
@@ -62,6 +64,8 @@ export function createProvider(
       return new OpenAIProvider(config);
     case 'ollama':
       return new OllamaProvider(config);
+    case 'mistral':
+      return new MistralProvider(config);
     default:
       throw new Error(`Unsupported AI provider: ${(config as any).provider}`);
   }

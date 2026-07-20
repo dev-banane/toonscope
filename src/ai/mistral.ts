@@ -3,18 +3,18 @@ import type { AIProvider, SummarizeFileRequest, FileSummary } from './index';
 import { buildSummarizationPrompt, parseAIResponse } from './prompts';
 import { ProviderRequestError, parseRetryAfterHeader } from './errors';
 
-export class OpenAIProvider implements AIProvider {
+export class MistralProvider implements AIProvider {
   constructor(private config: NonNullable<ToonConfig['ai']>) {}
 
   async summarizeFile(
     req: SummarizeFileRequest,
     signal?: AbortSignal
   ): Promise<FileSummary> {
-    const model = this.config.model ?? 'gpt-4.1-mini';
+    const model = this.config.model ?? 'mistral-small-latest';
     const apiKey = this.config.apiKey;
     if (!apiKey) {
       throw new Error(
-        'Missing OpenAI API key (OPENAI_API_KEY or config.ai.apiKey).'
+        'Missing Mistral API key (MISTRAL_API_KEY or config.ai.apiKey).'
       );
     }
 
@@ -30,7 +30,7 @@ export class OpenAIProvider implements AIProvider {
       undocumentedFunctions: req.undocumentedFunctions,
     });
 
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -52,7 +52,7 @@ export class OpenAIProvider implements AIProvider {
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw new ProviderRequestError(
-        `OpenAI request failed: ${res.status} ${text}`,
+        `Mistral request failed: ${res.status} ${text}`,
         {
           status: res.status,
           retryAfterMs: parseRetryAfterHeader(res.headers.get('retry-after')),
