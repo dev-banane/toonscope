@@ -6,7 +6,7 @@ opening a pull request.
 
 ## Getting set up
 
-You'll need Node 18 or newer (the repo is pinned to 22.13.0 in `.nvmrc`,
+You'll need Node 22 or newer (the repo is pinned to 22.13.0 in `.nvmrc`,
 so `nvm use` will get you there if you use nvm).
 
 ```bash

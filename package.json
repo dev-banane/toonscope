@@ -54,7 +54,7 @@
   "homepage": "https://github.com/dev-banane/toonscope#readme",
   "author": "dev-banane",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "chalk": "^5.6.2",
