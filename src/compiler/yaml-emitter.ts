@@ -49,7 +49,7 @@ function stringifyyaml(data: unknown): string {
   return doc.toString({ lineWidth: 120, flowCollectionPadding: false }).trimEnd() + '\n';
 }
 
-function shortSummary(s: string, max = 100): string {
+function shortSummary(s: string, max = 500): string {
   const oneLine = s.replace(/\s+/g, ' ').trim();
   return oneLine.length <= max ? oneLine : `${oneLine.slice(0, max - 1)}…`;
 }

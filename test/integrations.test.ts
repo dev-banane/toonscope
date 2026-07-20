@@ -54,6 +54,7 @@ describe('integration file management', () => {
     expect(content).toContain('.toon/types.yaml');
     expect(content).toContain('.toon/files/<path>.yaml');
     expect(content).toContain('toonscope scope <file> --depth 2');
+    expect(content).toContain('toonscope check');
     expect(content).toContain('85%');
   });
 

@@ -91,6 +91,7 @@ file's template summary.
 | --- | --- |
 | `toonscope init` | Detect the project, write `.toonscope.yaml`, optionally configure AI summaries and integration files, optionally run the first `generate`. |
 | `toonscope generate` | Analyze the codebase and write `.toon/`. Incremental by default (reuses `.toon/cache.json` for unchanged files); `--force` for a full rebuild. `--summarize` enables AI summaries; `--vault <path>` also writes a memory file for tools that read one. |
+| `toonscope check` | Verify `.toon/` is current against source — no rebuild, just a content-hash comparison. Exits 0 when up to date, 1 (with a list of stale/new/removed files) otherwise. This is what agents are instructed to run before trusting `.toon/`. |
 | `toonscope scope <file> --depth 2` | Print (or `--out` a file with) a merged YAML view of one file plus its dependency neighbors out to `--depth` hops — useful for a focused read without the whole `.toon/` tree. |
 | `toonscope stats` | Print raw vs. compressed token counts and the reduction percentage. |
 | `toonscope watch` | Rebuild `.toon/` incrementally as files change. |

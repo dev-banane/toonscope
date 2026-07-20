@@ -114,7 +114,13 @@ function contextBody(stats?: IntegrationStats): string[] {
     '',
     '**Workflow:** read `index.yaml` to locate the relevant files, then the per-file YAML(s) for files you are about to touch, instead of reading full source when the map already answers the question. For a merged dependency view of one file, run `npx toonscope scope <file> --depth 2`.',
     '',
-    '**Staleness:** the map can lag behind edits until `npx toonscope generate` runs again. If `.toon/` and the source ever disagree, trust the source.',
+    '**Before relying on `.toon/`, run `npx toonscope check`.** It compares source file hashes against the map with no rebuild — exits 0 and prints nothing (or a one-line OK with `--quiet` off) when the map is current, exits 1 and lists exactly which files are stale/new/removed otherwise. If it reports stale files, run `npx toonscope generate` before trusting those files\' summaries; if `.toon/` and the source ever disagree despite a clean check, trust the source.',
+    '',
+    'Commands (run via `npx toonscope <command>`, no install needed):',
+    '- `check` — verify `.toon/` is current (see above); use this first, every session',
+    '- `generate [--summarize]` — rebuild `.toon/`; add `--summarize` for LLM-written prose summaries (requires a configured provider)',
+    '- `scope <file> --depth 2` — print a merged view of one file plus its dependency neighbors',
+    '- `stats` — raw vs. compressed token counts',
   ];
 }
 

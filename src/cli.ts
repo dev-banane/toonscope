@@ -10,6 +10,7 @@ import {
   saveConfig,
 } from './config';
 import { generateContext } from './compiler/index';
+import { checkStaleness } from './compiler/check';
 import { scopeContext } from './graph/scope';
 import { buildProjectGraph } from './compiler/buildGraph';
 import { normalizeProjectRelativePath } from './utils/files';
@@ -966,6 +967,56 @@ program
         );
         console.log(`Token reduction: ${reduction.toFixed(1)}%`);
       }
+    } catch (err) {
+      console.error(
+        `\n  Fatal error: ${err instanceof Error ? err.message : String(err)}\n`
+      );
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('check')
+  .description(
+    'Check whether .toon/ is stale relative to source (no rebuild). Exits 1 if stale or never generated.'
+  )
+  .option('--config <path>', 'Path to .toonscope.yaml')
+  .option('--quiet', 'Reduce output to essentials')
+  .option('--json', 'Print machine-readable summary')
+  .option('--no-color', 'Disable terminal colors')
+  .action(async (opts) => {
+    const ro = renderFlags(opts);
+    try {
+      const projectRoot = resolveProjectRoot(process.cwd());
+      const config = loadConfig(projectRoot, opts.config);
+      const result = await checkStaleness(projectRoot, config);
+
+      if (ro.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else if (!result.generated) {
+        console.log(
+          '  ✘ .toon/ has not been generated yet. Run `toonscope generate`.'
+        );
+      } else if (result.ok) {
+        if (!ro.quiet) {
+          console.log(
+            `  ✔ .toon/ is up to date (${result.checkedFiles} files checked).`
+          );
+        }
+      } else {
+        console.log(
+          `  ✘ .toon/ is stale — ${result.stale.length} file(s) out of sync:`
+        );
+        for (const f of result.stale.slice(0, 50)) {
+          console.log(`    - ${f.path} (${f.reason})`);
+        }
+        if (result.stale.length > 50) {
+          console.log(`    … and ${result.stale.length - 50} more`);
+        }
+        console.log('\n  Run `toonscope generate` to refresh.');
+      }
+
+      if (!result.ok) process.exitCode = 1;
     } catch (err) {
       console.error(
         `\n  Fatal error: ${err instanceof Error ? err.message : String(err)}\n`
