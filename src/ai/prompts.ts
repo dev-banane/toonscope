@@ -121,7 +121,7 @@ export function buildSummarizationPrompt(params: SummarizationParams): {
     functionsAsk,
     '',
     'Respond with exactly this JSON shape (no markdown fences, no extra text):',
-    '{"summary": "<1-2 sentences, concrete, mentions the file\'s role and key behaviors — no fluff like \'This file contains\'>", "functions": {"<name>": "<one-line description>"}}',
+    '{"summary": "<exactly one concise sentence, ideally under 100 characters, concrete, mentions the file\'s role — no fluff like \'This file contains\'>", "functions": {"<name>": "<one-line description>"}}',
     params.undocumentedFunctions.length
       ? 'The "functions" object must contain only the names listed above, and only entries you are confident about.'
       : 'Omit the "functions" key (or leave it empty) since there are no undocumented functions to describe.',
