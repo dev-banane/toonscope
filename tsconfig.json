@@ -12,5 +12,6 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["src", "test", "benchmark"]
+  "include": ["src", "test", "benchmark"],
+  "exclude": ["test/fixtures"]
 }

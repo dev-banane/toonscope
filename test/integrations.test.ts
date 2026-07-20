@@ -29,7 +29,11 @@ describe('integration file management', () => {
       projectRoot: dir,
       config: {
         ...DEFAULT_CONFIG,
-        integrations: { ...DEFAULT_CONFIG.integrations, windsurf: true, agents: false },
+        integrations: {
+          ...DEFAULT_CONFIG.integrations,
+          windsurf: true,
+          agents: false,
+        },
       },
       stats: { fileCount: 0, reductionPct: 0 },
     });
@@ -79,9 +83,9 @@ describe('integration file management', () => {
 
     const results = removeIntegrationBlocks(dir);
 
-    expect(fs.existsSync(path.join(dir, '.cursor', 'rules', 'toonscope.mdc'))).toBe(
-      false
-    );
+    expect(
+      fs.existsSync(path.join(dir, '.cursor', 'rules', 'toonscope.mdc'))
+    ).toBe(false);
     expect(
       fs.existsSync(path.join(dir, '.windsurf', 'rules', 'toonscope.md'))
     ).toBe(false);

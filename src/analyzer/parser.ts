@@ -70,7 +70,10 @@ async function loadLanguage(name: GrammarName): Promise<Language> {
   return language;
 }
 
-export async function parseFile(sourceText: string, ext: string): Promise<Tree> {
+export async function parseFile(
+  sourceText: string,
+  ext: string
+): Promise<Tree> {
   const grammarName = grammarForFileExt(ext);
   const language = await loadLanguage(grammarName);
   const parser = new Parser();
@@ -78,7 +81,9 @@ export async function parseFile(sourceText: string, ext: string): Promise<Tree> 
     parser.setLanguage(language);
     const tree = parser.parse(sourceText);
     if (!tree) {
-      throw new Error(`toonscope: failed to parse source with grammar ${grammarName}`);
+      throw new Error(
+        `toonscope: failed to parse source with grammar ${grammarName}`
+      );
     }
     return tree;
   } finally {

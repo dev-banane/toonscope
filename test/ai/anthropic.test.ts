@@ -10,12 +10,17 @@ describe('AnthropicProvider', () => {
   it('sends the expected URL, headers, and body, and defaults to claude-haiku-4-5', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       mockOkResponse({
-        content: [{ type: 'text', text: '{"summary":"Handles login requests."}' }],
+        content: [
+          { type: 'text', text: '{"summary":"Handles login requests."}' },
+        ],
       })
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const provider = new AnthropicProvider({ provider: 'anthropic', apiKey: 'test-key' });
+    const provider = new AnthropicProvider({
+      provider: 'anthropic',
+      apiKey: 'test-key',
+    });
     const result = await provider.summarizeFile(baseRequest());
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -39,10 +44,15 @@ describe('AnthropicProvider', () => {
   });
 
   it('surfaces non-ok responses as retryable ProviderRequestErrors for 5xx', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(mockErrorResponse(503, 'overloaded'));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(mockErrorResponse(503, 'overloaded'));
     vi.stubGlobal('fetch', fetchMock);
 
-    const provider = new AnthropicProvider({ provider: 'anthropic', apiKey: 'k' });
+    const provider = new AnthropicProvider({
+      provider: 'anthropic',
+      apiKey: 'k',
+    });
     await expect(provider.summarizeFile(baseRequest())).rejects.toMatchObject({
       status: 503,
     });

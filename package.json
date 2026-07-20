@@ -21,7 +21,8 @@
     "benchmark": "tsx benchmark/run.ts",
     "benchmark:agent": "tsx benchmark/agent-bench.ts",
     "benchmark:agent-cli": "tsx benchmark/agent-cli-bench.ts",
-    "lint": "eslint src/",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "npm run build && npm run test:run"
   },
   "keywords": [
@@ -70,6 +71,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "prettier": "3.9.5",
     "tree-sitter-wasms": "^0.1.13",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",

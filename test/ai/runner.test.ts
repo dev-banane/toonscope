@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { runSummarization, type RunnerTask } from '../../src/ai/runner';
 import { ProviderRequestError } from '../../src/ai/errors';
-import type { AIProvider, SummarizeFileRequest, FileSummary } from '../../src/ai';
+import type {
+  AIProvider,
+  SummarizeFileRequest,
+  FileSummary,
+} from '../../src/ai';
 import { baseRequest } from './helpers';
 
 function taskFor(path: string): RunnerTask {

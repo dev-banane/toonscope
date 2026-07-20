@@ -103,12 +103,15 @@ function extractParamInfo(node: any): ParamInfo | null {
       const typeNode = node.childForFieldName?.('type');
       const valueNode = node.childForFieldName?.('value');
       const isRest = pattern?.type === 'rest_pattern';
-      const name = isRest ? patternText(pattern.namedChildren?.[0]) : patternText(pattern);
+      const name = isRest
+        ? patternText(pattern.namedChildren?.[0])
+        : patternText(pattern);
       const info: ParamInfo = { name };
       const type = cleanTypeText(typeNode);
       if (type) info.type = type;
       if (isRest) info.rest = true;
-      else if (node.type === 'optional_parameter' || valueNode) info.optional = true;
+      else if (node.type === 'optional_parameter' || valueNode)
+        info.optional = true;
       if (valueNode) info.default = valueNode.text.trim();
       return info;
     }
@@ -128,7 +131,8 @@ function extractParamInfo(node: any): ParamInfo | null {
     }
     case 'assignment_pattern': {
       const left = node.childForFieldName?.('left') ?? node.namedChildren?.[0];
-      const right = node.childForFieldName?.('right') ?? node.namedChildren?.[1];
+      const right =
+        node.childForFieldName?.('right') ?? node.namedChildren?.[1];
       return {
         name: patternText(left),
         optional: true,
@@ -155,7 +159,8 @@ function parseFormalParameters(formalParams: any): ParamInfo[] {
 
 function findFormalParams(node: any): any {
   return (
-    node.childForFieldName?.('parameters') ?? findChild(node, 'formal_parameters')
+    node.childForFieldName?.('parameters') ??
+    findChild(node, 'formal_parameters')
   );
 }
 
@@ -257,9 +262,11 @@ export function parseExportsFromSource(rootNode: any): ExportInfo[] {
     if (hasSource && sourceNode) {
       const from = stringNodeText(sourceNode);
       if (isStarExport) {
-        const nsNode = findChild(node, 'namespace_export') ?? node.namedChildren?.find(
-          (c: any) => c.type === 'identifier' && /\bas\s+/.test(node.text)
-        );
+        const nsNode =
+          findChild(node, 'namespace_export') ??
+          node.namedChildren?.find(
+            (c: any) => c.type === 'identifier' && /\bas\s+/.test(node.text)
+          );
         const alias =
           node.childForFieldName?.('alias')?.text ??
           nsNode?.namedChildren?.[0]?.text ??
@@ -285,12 +292,14 @@ export function parseExportsFromSource(rootNode: any): ExportInfo[] {
     }
   }
 
-  exports.push(...collectCjsExports(rootNode).filter((e) => {
-    const key = `${e.name}:${e.kind}:${e.isDefault}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }));
+  exports.push(
+    ...collectCjsExports(rootNode).filter((e) => {
+      const key = `${e.name}:${e.kind}:${e.isDefault}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+  );
 
   return exports;
 }
@@ -306,7 +315,10 @@ function isRequireCall(node: any): string | null {
   return stringNodeText(strNode);
 }
 
-function topLevelDeclKind(rootNode: any, name: string): ExportInfo['kind'] | undefined {
+function topLevelDeclKind(
+  rootNode: any,
+  name: string
+): ExportInfo['kind'] | undefined {
   for (const node of topLevelNodes(rootNode)) {
     switch (node.type) {
       case 'function_declaration':
@@ -319,9 +331,13 @@ function topLevelDeclKind(rootNode: any, name: string): ExportInfo['kind'] | und
       case 'lexical_declaration':
       case 'variable_declaration':
         for (const decl of node.namedChildren ?? []) {
-          if (decl.type !== 'variable_declarator' || nodeName(decl) !== name) continue;
+          if (decl.type !== 'variable_declarator' || nodeName(decl) !== name)
+            continue;
           const value = decl.childForFieldName?.('value');
-          if (value?.type === 'arrow_function' || value?.type === 'function_expression')
+          if (
+            value?.type === 'arrow_function' ||
+            value?.type === 'function_expression'
+          )
             return 'function';
           if (value?.type === 'class') return 'class';
           return 'const';
@@ -382,9 +398,14 @@ export function collectCjsExports(rootNode: any): ExportInfo[] {
       const prop = left.childForFieldName?.('property');
       const propName = prop?.text ?? '';
 
-      const objIsExportsIdent = obj?.type === 'identifier' && obj.text === 'exports';
+      const objIsExportsIdent =
+        obj?.type === 'identifier' && obj.text === 'exports';
       if ((isModuleExportsMember(obj) || objIsExportsIdent) && propName) {
-        out.push({ name: propName, kind: kindOfValueNode(right, rootNode), isDefault: false });
+        out.push({
+          name: propName,
+          kind: kindOfValueNode(right, rootNode),
+          isDefault: false,
+        });
         continue;
       }
 
@@ -395,7 +416,12 @@ export function collectCjsExports(rootNode: any): ExportInfo[] {
               const keyNode = prop2.childForFieldName?.('key');
               const valNode = prop2.childForFieldName?.('value');
               const name = (keyNode?.text ?? '').replace(/^['"]|['"]$/g, '');
-              if (name) out.push({ name, kind: kindOfValueNode(valNode, rootNode), isDefault: false });
+              if (name)
+                out.push({
+                  name,
+                  kind: kindOfValueNode(valNode, rootNode),
+                  isDefault: false,
+                });
             } else if (
               prop2.type === 'shorthand_property_identifier' ||
               prop2.type === 'shorthand_property_identifier_pattern'
@@ -425,9 +451,12 @@ function collectCjsSignatures(rootNode: any): SignatureInfo[] {
 
   function addFromFunctionNode(name: string, fnNode: any, anchor: any) {
     if (
-      !['function_expression', 'function', 'arrow_function', 'generator_function'].includes(
-        fnNode?.type
-      )
+      ![
+        'function_expression',
+        'function',
+        'arrow_function',
+        'generator_function',
+      ].includes(fnNode?.type)
     )
       return;
     const params = parseFormalParameters(findFormalParams(fnNode));
@@ -454,7 +483,8 @@ function collectCjsSignatures(rootNode: any): SignatureInfo[] {
     const obj = left.childForFieldName?.('object');
     const prop = left.childForFieldName?.('property');
     const propName = prop?.text ?? '';
-    const objIsExportsIdent = obj?.type === 'identifier' && obj.text === 'exports';
+    const objIsExportsIdent =
+      obj?.type === 'identifier' && obj.text === 'exports';
 
     if ((isModuleExportsMember(obj) || objIsExportsIdent) && propName) {
       addFromFunctionNode(propName, right, node);
@@ -573,7 +603,10 @@ function collectCjsImports(
   const out: ImportInfo[] = [];
 
   for (const node of topLevelNodes(rootNode)) {
-    if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
+    if (
+      node.type === 'lexical_declaration' ||
+      node.type === 'variable_declaration'
+    ) {
       for (const decl of node.namedChildren ?? []) {
         if (decl.type !== 'variable_declarator') continue;
         const value = decl.childForFieldName?.('value');
@@ -596,12 +629,23 @@ function collectCjsImports(
             }
           }
         }
-        out.push({ source, resolvedPath: resolve(source), names, isTypeOnly: false });
+        out.push({
+          source,
+          resolvedPath: resolve(source),
+          names,
+          isTypeOnly: false,
+        });
       }
     } else if (node.type === 'expression_statement') {
       const expr = node.namedChildren?.[0];
       const source = isRequireCall(expr);
-      if (source) out.push({ source, resolvedPath: resolve(source), names: [], isTypeOnly: false });
+      if (source)
+        out.push({
+          source,
+          resolvedPath: resolve(source),
+          names: [],
+          isTypeOnly: false,
+        });
     }
   }
 
@@ -650,10 +694,15 @@ export function parseSignaturesFromSource(rootNode: any): SignatureInfo[] {
     });
   }
 
-  function processClass(classNode: any, isExported: boolean, nameOverride?: string) {
+  function processClass(
+    classNode: any,
+    isExported: boolean,
+    nameOverride?: string
+  ) {
     const className = nodeName(classNode) || nameOverride || 'default';
     const classBody =
-      classNode.childForFieldName?.('body') ?? findChild(classNode, 'class_body');
+      classNode.childForFieldName?.('body') ??
+      findChild(classNode, 'class_body');
     if (!classBody) return;
 
     for (const member of classBody.namedChildren ?? []) {
@@ -664,7 +713,8 @@ export function parseSignaturesFromSource(rootNode: any): SignatureInfo[] {
       const isPrivate =
         methodName.startsWith('#') ||
         member.namedChildren?.some(
-          (c: any) => c.type === 'accessibility_modifier' && c.text === 'private'
+          (c: any) =>
+            c.type === 'accessibility_modifier' && c.text === 'private'
         );
       if (isPrivate) continue;
 
@@ -678,7 +728,8 @@ export function parseSignaturesFromSource(rootNode: any): SignatureInfo[] {
         kind,
         className,
         params: parseFormalParameters(findFormalParams(member)),
-        returnType: kind === 'constructor' ? undefined : extractReturnType(member),
+        returnType:
+          kind === 'constructor' ? undefined : extractReturnType(member),
         isAsync: isAsyncNode(member),
         isGenerator: isGeneratorNode(member),
         isExported,
@@ -911,8 +962,9 @@ export function parseSummaryTemplate(analysis: FileAnalysis): string {
   const firstExport = analysis.exports[0]?.name;
 
   const primarySig =
-    analysis.signatures.find((s) => s.isExported && s.name === firstExport && s.doc) ??
-    analysis.signatures.find((s) => s.isExported && s.doc);
+    analysis.signatures.find(
+      (s) => s.isExported && s.name === firstExport && s.doc
+    ) ?? analysis.signatures.find((s) => s.isExported && s.doc);
   const primaryType = analysis.types.find((t) => t.isExported && t.doc);
   const doc = primarySig?.doc ?? primaryType?.doc;
   if (doc) return doc;

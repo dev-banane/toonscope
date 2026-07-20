@@ -14,7 +14,11 @@ describe('GoogleProvider', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: '{"summary":"Handles login requests.","functions":{}}' }],
+              parts: [
+                {
+                  text: '{"summary":"Handles login requests.","functions":{}}',
+                },
+              ],
             },
           },
         ],
@@ -22,7 +26,10 @@ describe('GoogleProvider', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const provider = new GoogleProvider({ provider: 'google', apiKey: 'test-key' });
+    const provider = new GoogleProvider({
+      provider: 'google',
+      apiKey: 'test-key',
+    });
     const result = await provider.summarizeFile(baseRequest());
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -36,7 +43,9 @@ describe('GoogleProvider', () => {
 
     const body = JSON.parse(init.body);
     expect(body.contents[0].parts[0].text).toContain('src/api/auth.ts');
-    expect(body.systemInstruction.parts[0].text).toMatch(/precise code summarization/i);
+    expect(body.systemInstruction.parts[0].text).toMatch(
+      /precise code summarization/i
+    );
     expect(result.summary).toBe('Handles login requests.');
   });
 
@@ -74,8 +83,7 @@ describe('GoogleProvider', () => {
             content: {
               parts: [
                 {
-                  text:
-                    '```json\n{"summary":"Does X.","functions":{"foo":"Does the thing.","bar":"Unlisted."}}\n```',
+                  text: '```json\n{"summary":"Does X.","functions":{"foo":"Does the thing.","bar":"Unlisted."}}\n```',
                 },
               ],
             },
@@ -97,7 +105,9 @@ describe('GoogleProvider', () => {
   it('throws a ProviderRequestError carrying status and retry-after on non-ok responses', async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(mockErrorResponse(429, 'rate limited', { 'retry-after': '2' }));
+      .mockResolvedValue(
+        mockErrorResponse(429, 'rate limited', { 'retry-after': '2' })
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     const provider = new GoogleProvider({ provider: 'google', apiKey: 'k' });

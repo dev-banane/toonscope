@@ -18,7 +18,7 @@ export const REALISTIC_TASKS: AgentTask[] = [
       "some useful piece of functionality that fits naturally into this app's existing UI/API (pick something " +
       'appropriate based on what you see). Tell me exactly which file(s) you would add or modify, which existing ' +
       'component or pattern to follow, and sketch the code change. Answer like you are replying to a teammate ' +
-      "on Slack - practical and to the point, not a design doc.",
+      'on Slack - practical and to the point, not a design doc.',
   },
   {
     id: 'bug-triage',

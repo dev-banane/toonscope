@@ -39,10 +39,7 @@ describe('WASM tree-sitter parser', () => {
   });
 
   it('parses a Python snippet', async () => {
-    const tree = await parseFile(
-      'def add(a, b):\n    return a + b\n',
-      '.py'
-    );
+    const tree = await parseFile('def add(a, b):\n    return a + b\n', '.py');
     try {
       expect(tree.rootNode.namedChildren.length).toBeGreaterThan(0);
     } finally {

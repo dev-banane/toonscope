@@ -21,7 +21,9 @@ function withGeminiResponse(fetchMock: ReturnType<typeof vi.fn>) {
               {
                 text: JSON.stringify({
                   summary: `AI summary for ${filePath}.`,
-                  functions: { formatDate: 'Formats a date string for display.' },
+                  functions: {
+                    formatDate: 'Formats a date string for display.',
+                  },
                 }),
               },
             ],
@@ -48,7 +50,11 @@ describe('AI summary cache', () => {
   it('performs zero fetch calls on a second run with unchanged files, and re-summarizes only a changed file', async () => {
     const projectRoot = copyFixtureToTmp('simple-react');
     const config = defaultTestConfig(projectRoot);
-    config.ai = { provider: 'google', apiKey: 'test-key', model: 'gemini-2.5-flash' };
+    config.ai = {
+      provider: 'google',
+      apiKey: 'test-key',
+      model: 'gemini-2.5-flash',
+    };
 
     const fetchMock = vi.fn();
     withGeminiResponse(fetchMock);
@@ -64,14 +70,20 @@ describe('AI summary cache', () => {
 
     const changedAbs = path.join(projectRoot, 'src/utils/format.ts');
     const original = fs.readFileSync(changedAbs, 'utf8');
-    fs.writeFileSync(changedAbs, `${original}\nexport const EXTRA = 1;\n`, 'utf8');
+    fs.writeFileSync(
+      changedAbs,
+      `${original}\nexport const EXTRA = 1;\n`,
+      'utf8'
+    );
 
     fetchMock.mockClear();
     await generateContext(projectRoot, config, { summarize: true });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, changedInit] = fetchMock.mock.calls[0];
     const changedBody = JSON.parse(changedInit.body);
-    expect(changedBody.contents[0].parts[0].text).toContain('src/utils/format.ts');
+    expect(changedBody.contents[0].parts[0].text).toContain(
+      'src/utils/format.ts'
+    );
 
     fs.rmSync(projectRoot, { recursive: true, force: true });
   });

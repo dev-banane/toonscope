@@ -114,7 +114,7 @@ function contextBody(stats?: IntegrationStats): string[] {
     '',
     '**Workflow:** read `index.yaml` to locate the relevant files, then the per-file YAML(s) for files you are about to touch, instead of reading full source when the map already answers the question. For a merged dependency view of one file, run `npx toonscope scope <file> --depth 2`.',
     '',
-    '**Before relying on `.toon/`, run `npx toonscope check`.** It compares source file hashes against the map with no rebuild — exits 0 and prints nothing (or a one-line OK with `--quiet` off) when the map is current, exits 1 and lists exactly which files are stale/new/removed otherwise. If it reports stale files, run `npx toonscope generate` before trusting those files\' summaries; if `.toon/` and the source ever disagree despite a clean check, trust the source.',
+    "**Before relying on `.toon/`, run `npx toonscope check`.** It compares source file hashes against the map with no rebuild — exits 0 and prints nothing (or a one-line OK with `--quiet` off) when the map is current, exits 1 and lists exactly which files are stale/new/removed otherwise. If it reports stale files, run `npx toonscope generate` before trusting those files' summaries; if `.toon/` and the source ever disagree despite a clean check, trust the source.",
     '',
     'Commands (run via `npx toonscope <command>`, no install needed):',
     '- `check` — verify `.toon/` is current (see above); use this first, every session',
@@ -164,13 +164,8 @@ function cursorRule(stats: IntegrationStats): string {
 
 function windsurfRule(stats: IntegrationStats): string {
   return (
-    [
-      '---',
-      'trigger: always_on',
-      '---',
-      '',
-      ...contextBody(stats),
-    ].join('\n') + '\n'
+    ['---', 'trigger: always_on', '---', '', ...contextBody(stats)].join('\n') +
+    '\n'
   );
 }
 

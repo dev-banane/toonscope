@@ -57,7 +57,10 @@ function sumTokenFields(obj: any, seen = new Set<any>()): number {
   seen.add(obj);
   let sum = 0;
   for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'number' && /^total_tokens$|totalTokenCount|tokens\.total/i.test(key)) {
+    if (
+      typeof value === 'number' &&
+      /^total_tokens$|totalTokenCount|tokens\.total/i.test(key)
+    ) {
       sum += value;
     } else if (typeof value === 'object') {
       sum += sumTokenFields(value, seen);
@@ -72,7 +75,11 @@ function countToolCalls(obj: any): number {
   let count = 0;
   for (const value of Object.values(tools)) {
     if (typeof value === 'number') count += value;
-    else if (value && typeof value === 'object' && typeof (value as any).count === 'number') {
+    else if (
+      value &&
+      typeof value === 'object' &&
+      typeof (value as any).count === 'number'
+    ) {
       count += (value as any).count;
     }
   }
@@ -84,33 +91,43 @@ async function runGeminiCli(
   cwd: string,
   question: string
 ): Promise<ConditionResult> {
-  const args = ['-p', question, '--approval-mode', 'plan', '--skip-trust', '-o', 'json'];
+  const args = [
+    '-p',
+    question,
+    '--approval-mode',
+    'plan',
+    '--skip-trust',
+    '-o',
+    'json',
+  ];
   if (model) args.push('-m', model);
 
   const start = Date.now();
-  const result = await new Promise<{ stdout: string; stderr: string; timedOut: boolean }>(
-    (resolve) => {
-      const child = spawn('gemini', args, { cwd, env: process.env });
-      let stdout = '';
-      let stderr = '';
-      let timedOut = false;
-      const timer = setTimeout(() => {
-        timedOut = true;
-        child.kill('SIGKILL');
-      }, CALL_TIMEOUT_MS);
-      child.stdout.on('data', (d) => (stdout += d.toString()));
-      child.stderr.on('data', (d) => (stderr += d.toString()));
-      child.on('close', () => {
-        clearTimeout(timer);
-        resolve({ stdout, stderr, timedOut });
-      });
-      child.on('error', (e) => {
-        clearTimeout(timer);
-        stderr += `\nspawn error: ${e.message}`;
-        resolve({ stdout, stderr, timedOut });
-      });
-    }
-  );
+  const result = await new Promise<{
+    stdout: string;
+    stderr: string;
+    timedOut: boolean;
+  }>((resolve) => {
+    const child = spawn('gemini', args, { cwd, env: process.env });
+    let stdout = '';
+    let stderr = '';
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGKILL');
+    }, CALL_TIMEOUT_MS);
+    child.stdout.on('data', (d) => (stdout += d.toString()));
+    child.stderr.on('data', (d) => (stderr += d.toString()));
+    child.on('close', () => {
+      clearTimeout(timer);
+      resolve({ stdout, stderr, timedOut });
+    });
+    child.on('error', (e) => {
+      clearTimeout(timer);
+      stderr += `\nspawn error: ${e.message}`;
+      resolve({ stdout, stderr, timedOut });
+    });
+  });
   const latencyMs = Date.now() - start;
 
   if (result.timedOut) {
@@ -125,7 +142,8 @@ async function runGeminiCli(
     };
   }
 
-  const parsed = extractJsonObject(result.stdout) ?? extractJsonObject(result.stderr);
+  const parsed =
+    extractJsonObject(result.stdout) ?? extractJsonObject(result.stderr);
   if (!parsed) {
     return {
       latencyMs,
@@ -167,7 +185,9 @@ async function buildToonWorkspace(
   projectDir: string,
   config: ReturnType<typeof loadConfig>
 ): Promise<string> {
-  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'toonscope-cli-bench-'));
+  const outputDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'toonscope-cli-bench-')
+  );
   await generateContext(projectDir, { ...config, output: outputDir });
   return outputDir;
 }
@@ -238,7 +258,9 @@ async function main() {
     );
   }
   if (relFiles.length === 0) {
-    console.error(`No source files found under ${projectDir}. Nothing to benchmark.`);
+    console.error(
+      `No source files found under ${projectDir}. Nothing to benchmark.`
+    );
     process.exit(1);
   }
 
@@ -365,7 +387,8 @@ async function main() {
 
   console.log(`\n${table.toString()}\n`);
 
-  const avgSpeedup = sumRawMs > 0 ? ((sumRawMs - sumToonMs) / sumRawMs) * 100 : 0;
+  const avgSpeedup =
+    sumRawMs > 0 ? ((sumRawMs - sumToonMs) / sumRawMs) * 100 : 0;
   const avgTokCut =
     sumRawTok > 0 ? ((sumRawTok - sumToonTok) / sumRawTok) * 100 : 0;
 

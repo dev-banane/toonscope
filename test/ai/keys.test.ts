@@ -84,7 +84,10 @@ describe('key resolution', () => {
       homeDir: tmpHome,
       projectConfigKey: 'legacy-yaml-key',
     });
-    expect(result).toEqual({ key: 'legacy-yaml-key', source: 'project-config' });
+    expect(result).toEqual({
+      key: 'legacy-yaml-key',
+      source: 'project-config',
+    });
   });
 
   it('returns null when no key can be resolved anywhere', () => {
@@ -118,6 +121,8 @@ describe('key resolution', () => {
     expect(lines.some((l) => l.includes('GEMINI_API_KEY'))).toBe(true);
     expect(lines.some((l) => l.includes('GOOGLE_API_KEY'))).toBe(true);
     expect(lines.some((l) => l.includes('TOONSCOPE_API_KEY'))).toBe(true);
-    expect(lines.some((l) => l.includes('toonscope key set google'))).toBe(true);
+    expect(lines.some((l) => l.includes('toonscope key set google'))).toBe(
+      true
+    );
   });
 });

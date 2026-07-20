@@ -96,13 +96,11 @@ describe('TS/JS signature extraction edge cases', () => {
   });
 
   it('gives an anonymous default export arrow function the name "default"', async () => {
-    const { exports, signatures } = await parseTs(
-      `export default () => 42;`
-    );
+    const { exports, signatures } = await parseTs(`export default () => 42;`);
     expect(exports.some((e) => e.name === 'default' && e.isDefault)).toBe(true);
-    expect(signatures.some((s) => s.name === 'default' && s.kind === 'arrow')).toBe(
-      true
-    );
+    expect(
+      signatures.some((s) => s.name === 'default' && s.kind === 'arrow')
+    ).toBe(true);
   });
 
   it('records `export { x } from "./y"` as a re-export, not a default', async () => {

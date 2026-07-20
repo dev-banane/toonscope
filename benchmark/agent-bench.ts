@@ -65,7 +65,9 @@ async function callGemini(
             {
               role: 'user',
               parts: [
-                { text: `Codebase context:\n\n${context}\n\nQuestion: ${question}` },
+                {
+                  text: `Codebase context:\n\n${context}\n\nQuestion: ${question}`,
+                },
               ],
             },
           ],
@@ -234,7 +236,9 @@ async function main() {
   }
 
   if (relFiles.length === 0) {
-    console.error(`No source files found under ${projectDir}. Nothing to benchmark.`);
+    console.error(
+      `No source files found under ${projectDir}. Nothing to benchmark.`
+    );
     process.exit(1);
   }
 
@@ -362,7 +366,8 @@ async function main() {
 
   console.log(`\n${table.toString()}\n`);
 
-  const avgSpeedup = sumRawMs > 0 ? ((sumRawMs - sumToonMs) / sumRawMs) * 100 : 0;
+  const avgSpeedup =
+    sumRawMs > 0 ? ((sumRawMs - sumToonMs) / sumRawMs) * 100 : 0;
   const avgTokCut =
     sumRawTok > 0 ? ((sumRawTok - sumToonTok) / sumRawTok) * 100 : 0;
 

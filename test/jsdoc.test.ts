@@ -92,7 +92,9 @@ describe('TS/JS JSDoc extraction', () => {
   });
 
   describe('per-file YAML emission', () => {
-    const tmpProject = fs.mkdtempSync(path.join(os.tmpdir(), 'toonscope-jsdoc-'));
+    const tmpProject = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'toonscope-jsdoc-')
+    );
 
     afterAll(() => {
       fs.rmSync(tmpProject, { recursive: true, force: true });

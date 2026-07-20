@@ -40,7 +40,9 @@ describe('Python analyzer', () => {
     expect(userType.definition).toContain('name: str');
     expect(userType.definition).toContain('email: Optional[str]');
 
-    const ctor = analysis.signatures.find((s) => s.name === 'Greeter.__init__')!;
+    const ctor = analysis.signatures.find(
+      (s) => s.name === 'Greeter.__init__'
+    )!;
     expect(ctor.kind).toBe('constructor');
     expect(ctor.doc).toBe('Create a greeter with a custom greeting.');
     // `self` is dropped; a bare `*` marks the keyword-only boundary.
@@ -53,7 +55,11 @@ describe('Python analyzer', () => {
     expect(loud.default).toBe('False');
 
     const greet = analysis.signatures.find((s) => s.name === 'Greeter.greet')!;
-    expect(greet.params.map((p) => p.name)).toEqual(['user', '*names', '**opts']);
+    expect(greet.params.map((p) => p.name)).toEqual([
+      'user',
+      '*names',
+      '**opts',
+    ]);
     expect(greet.returnType).toBe('str');
     expect(greet.doc).toBe('Return a greeting for the given user.');
 

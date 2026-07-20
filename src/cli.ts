@@ -140,11 +140,11 @@ async function promptHidden(question: string): Promise<string> {
   return new Promise((resolve) => {
     const stdin = process.stdin;
     process.stdout.write(question);
-    let value = "";
+    let value = '';
     const onData = (chunk: Buffer) => {
       const code = chunk.length === 1 ? chunk[0] : -1;
       if (code !== -1 && (ENTER_CODES.has(code) || code === CTRL_D_CODE)) {
-        stdin.removeListener("data", onData);
+        stdin.removeListener('data', onData);
         stdin.setRawMode?.(false);
         stdin.pause();
         process.stdout.write('\n');
@@ -158,11 +158,11 @@ async function promptHidden(question: string): Promise<string> {
         value = value.slice(0, -1);
         return;
       }
-      value += chunk.toString("utf8");
+      value += chunk.toString('utf8');
     };
     stdin.setRawMode?.(true);
     stdin.resume();
-    stdin.on("data", onData);
+    stdin.on('data', onData);
   });
 }
 
@@ -392,7 +392,8 @@ async function runGenerate(params: {
     ? config.output
     : path.join(projectRoot, config.output);
 
-  let largestFile: { path: string; raw: number; toon: number; pctSaved: number } | undefined;
+  let largestFile:
+    { path: string; raw: number; toon: number; pctSaved: number } | undefined;
   if (largestPath) {
     const largestYamlPath = fileyamlPath(outputDir, largestPath);
     const largestToon = fs.existsSync(largestYamlPath)
@@ -402,7 +403,8 @@ async function runGenerate(params: {
       path: largestPath,
       raw: largestRaw,
       toon: largestToon,
-      pctSaved: largestRaw > 0 ? ((largestRaw - largestToon) / largestRaw) * 100 : 0,
+      pctSaved:
+        largestRaw > 0 ? ((largestRaw - largestToon) / largestRaw) * 100 : 0,
     };
   }
   const graphYaml = yaml.parse(
@@ -754,7 +756,9 @@ program
         });
         if (result.ok) printNextSteps(ro);
       } else if (!ro.quiet && !ro.json) {
-        console.log('  Skipped. Run `toonscope generate` any time to build .toon/.\n');
+        console.log(
+          '  Skipped. Run `toonscope generate` any time to build .toon/.\n'
+        );
       }
 
       if (ro.json) {
@@ -935,7 +939,11 @@ program
     try {
       printHeader(packageJson.version, ro);
       const projectRoot = resolveProjectRoot(process.cwd());
-      if (!ro.quiet && !ro.json && !configFileExists(projectRoot, opts.config)) {
+      if (
+        !ro.quiet &&
+        !ro.json &&
+        !configFileExists(projectRoot, opts.config)
+      ) {
         printNoConfigNote(projectRoot);
       }
       const config = loadConfig(projectRoot, opts.config);
@@ -1037,7 +1045,11 @@ program
     try {
       printHeader(packageJson.version, ro);
       const projectRoot = resolveProjectRoot(process.cwd());
-      if (!ro.quiet && !ro.json && !configFileExists(projectRoot, opts.config)) {
+      if (
+        !ro.quiet &&
+        !ro.json &&
+        !configFileExists(projectRoot, opts.config)
+      ) {
         printNoConfigNote(projectRoot);
       }
       const config = loadConfig(projectRoot, opts.config);
@@ -1133,7 +1145,9 @@ program
 
 const keyCommand = program
   .command('key')
-  .description('Manage stored AI provider API keys (~/.config/toonscope/config.json)');
+  .description(
+    'Manage stored AI provider API keys (~/.config/toonscope/config.json)'
+  );
 
 keyCommand
   .command('set <provider>')

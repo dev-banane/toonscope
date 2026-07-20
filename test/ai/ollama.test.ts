@@ -10,7 +10,10 @@ describe('OllamaProvider', () => {
   it('defaults to llama3.2 against http://localhost:11434 and needs no api key', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       mockOkResponse({
-        message: { role: 'assistant', content: '{"summary":"Handles login requests."}' },
+        message: {
+          role: 'assistant',
+          content: '{"summary":"Handles login requests."}',
+        },
       })
     );
     vi.stubGlobal('fetch', fetchMock);
@@ -27,9 +30,11 @@ describe('OllamaProvider', () => {
   });
 
   it('honors a configurable base url', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      mockOkResponse({ message: { content: '{"summary":"X."}' } })
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        mockOkResponse({ message: { content: '{"summary":"X."}' } })
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     const provider = new OllamaProvider({

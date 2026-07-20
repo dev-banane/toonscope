@@ -234,7 +234,9 @@ export function printSummaryBox(
   if (stats.parseErrors)
     table.push([
       'Parse errors',
-      ctx.chalk.yellow(`${stats.parseErrors} file(s) skipped (see warnings above)`),
+      ctx.chalk.yellow(
+        `${stats.parseErrors} file(s) skipped (see warnings above)`
+      ),
     ]);
   console.log(`\n${table.toString()}\n`);
 }

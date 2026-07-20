@@ -39,14 +39,18 @@ function flowifyShortArrays(node: unknown): void {
     }
     for (const it of items) flowifyShortArrays(it);
   } else if (isMap(node)) {
-    for (const pair of node.items) flowifyShortArrays((pair as { value: unknown }).value);
+    for (const pair of node.items)
+      flowifyShortArrays((pair as { value: unknown }).value);
   }
 }
 
 function stringifyyaml(data: unknown): string {
   const doc = new Document(data);
   flowifyShortArrays(doc.contents);
-  return doc.toString({ lineWidth: 120, flowCollectionPadding: false }).trimEnd() + '\n';
+  return (
+    doc.toString({ lineWidth: 120, flowCollectionPadding: false }).trimEnd() +
+    '\n'
+  );
 }
 
 function shortSummary(s: string, max = 500): string {
@@ -83,7 +87,10 @@ export function sigToCompactString(
   return `${kindPrefix}${asyncPrefix}${genStar}${baseName}(${paramsStr})${ret}`;
 }
 
-function sigValue(sig: SignatureInfo, language: Language): string | { sig: string; doc: string } {
+function sigValue(
+  sig: SignatureInfo,
+  language: Language
+): string | { sig: string; doc: string } {
   const s = sigToCompactString(sig, language);
   return sig.doc ? { sig: s, doc: sig.doc } : s;
 }
@@ -93,7 +100,8 @@ function exportLabel(e: ExportInfo): string {
     const from = e.reexport?.from ?? '?';
     return e.reexport?.star ? `* from ${from}` : `${e.name} from ${from}`;
   }
-  if (e.isDefault) return e.name === 'default' ? 'default' : `${e.name} (default)`;
+  if (e.isDefault)
+    return e.name === 'default' ? 'default' : `${e.name} (default)`;
   return e.name;
 }
 
@@ -146,13 +154,14 @@ function buildImportsSection(
     for (const n of imp.names) bucket.get(key)!.add(n);
   }
 
-  const toEntries = (map: Map<string, Set<string>>, keyField: 'path' | 'source') =>
+  const toEntries = (
+    map: Map<string, Set<string>>,
+    keyField: 'path' | 'source'
+  ) =>
     [...map.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, names]) =>
-        names.size
-          ? { [keyField]: key, names: [...names].sort() }
-          : key
+        names.size ? { [keyField]: key, names: [...names].sort() } : key
       );
 
   const local = toEntries(localMap, 'path');
@@ -187,7 +196,9 @@ function buildFunctionsSection(
   return out;
 }
 
-function buildTypesSection(analysis: FileAnalysis): Record<string, unknown> | undefined {
+function buildTypesSection(
+  analysis: FileAnalysis
+): Record<string, unknown> | undefined {
   if (!analysis.types.length) return undefined;
   const out: Record<string, unknown> = {};
   for (const t of analysis.types) {
@@ -279,8 +290,12 @@ export function writeFileyaml(
   if (typesSection) payload.types = typesSection;
 
   if (graph) {
-    const uses = [...(graph.edges.imports.get(analysis.path) ?? new Set<string>())].sort();
-    const usedBy = [...(graph.edges.importedBy.get(analysis.path) ?? new Set<string>())].sort();
+    const uses = [
+      ...(graph.edges.imports.get(analysis.path) ?? new Set<string>()),
+    ].sort();
+    const usedBy = [
+      ...(graph.edges.importedBy.get(analysis.path) ?? new Set<string>()),
+    ].sort();
     if (uses.length) payload.uses = uses;
     if (usedBy.length) payload.used_by = usedBy;
   }
@@ -361,7 +376,9 @@ export function writeGraphyaml(
 ): { primaryPath: string; fullPath?: string } {
   const fullEdges: Record<string, string[]> = {};
   for (const p of [...graph.nodes.keys()].sort()) {
-    const imports = [...(graph.edges.imports.get(p) ?? new Set<string>())].sort();
+    const imports = [
+      ...(graph.edges.imports.get(p) ?? new Set<string>()),
+    ].sort();
     if (imports.length) fullEdges[p] = imports;
   }
   const clusters = detectClusters(graph);

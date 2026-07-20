@@ -3,11 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 
 export type AIProviderId =
-  | 'google'
-  | 'anthropic'
-  | 'openai'
-  | 'ollama'
-  | 'mistral';
+  'google' | 'anthropic' | 'openai' | 'ollama' | 'mistral';
 
 export function normalizeProviderId(provider: string): string {
   return provider === 'gemini' ? 'google' : provider;

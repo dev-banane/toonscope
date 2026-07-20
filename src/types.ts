@@ -6,7 +6,8 @@ export interface ToonConfig {
   output: string;
   defaultDepth: number;
   ai?: {
-    provider: 'google' | 'gemini' | 'anthropic' | 'openai' | 'ollama' | 'mistral';
+    provider:
+      'google' | 'gemini' | 'anthropic' | 'openai' | 'ollama' | 'mistral';
     model?: string;
     apiKey?: string; // env: GEMINI_API_KEY / GOOGLE_API_KEY / ANTHROPIC_API_KEY / OPENAI_API_KEY / MISTRAL_API_KEY / TOONSCOPE_API_KEY
     ollamaUrl?: string; // default: http://localhost:11434
@@ -68,13 +69,7 @@ export interface ParamInfo {
 
 export interface SignatureInfo {
   name: string;
-  kind:
-    | 'function'
-    | 'arrow'
-    | 'method'
-    | 'getter'
-    | 'setter'
-    | 'constructor';
+  kind: 'function' | 'arrow' | 'method' | 'getter' | 'setter' | 'constructor';
   params: ParamInfo[];
   returnType?: string;
   isAsync: boolean;

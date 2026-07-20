@@ -10,12 +10,17 @@ describe('MistralProvider', () => {
   it('sends the expected URL, headers, and body, and defaults to mistral-small-latest', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       mockOkResponse({
-        choices: [{ message: { content: '{"summary":"Handles login requests."}' } }],
+        choices: [
+          { message: { content: '{"summary":"Handles login requests."}' } },
+        ],
       })
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const provider = new MistralProvider({ provider: 'mistral', apiKey: 'test-key' });
+    const provider = new MistralProvider({
+      provider: 'mistral',
+      apiKey: 'test-key',
+    });
     const result = await provider.summarizeFile(baseRequest());
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -39,10 +44,15 @@ describe('MistralProvider', () => {
   });
 
   it('does not retry-flag plain 401s (non-retryable) but still surfaces status', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(mockErrorResponse(401, 'unauthorized'));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(mockErrorResponse(401, 'unauthorized'));
     vi.stubGlobal('fetch', fetchMock);
 
-    const provider = new MistralProvider({ provider: 'mistral', apiKey: 'bad-key' });
+    const provider = new MistralProvider({
+      provider: 'mistral',
+      apiKey: 'bad-key',
+    });
     await expect(provider.summarizeFile(baseRequest())).rejects.toMatchObject({
       status: 401,
     });

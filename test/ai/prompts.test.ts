@@ -63,7 +63,10 @@ describe('parseAIResponse', () => {
   });
 
   it('strips fences without a json language tag', () => {
-    const result = parseAIResponse('```\n{"summary":"Handles login."}\n```', []);
+    const result = parseAIResponse(
+      '```\n{"summary":"Handles login."}\n```',
+      []
+    );
     expect(result.summary).toBe('Handles login.');
   });
 

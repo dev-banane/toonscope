@@ -21,11 +21,16 @@ describe('tsconfig path alias resolution', () => {
   });
 
   it('produces a graph edge for the alias-resolved import', async () => {
-    const graph = await buildProjectGraph({ projectRoot, config, useCache: false });
+    const graph = await buildProjectGraph({
+      projectRoot,
+      config,
+      useCache: false,
+    });
 
     const deps = graph.edges.imports.get('src/index.ts') ?? new Set();
     expect(deps.has('src/utils/math.ts')).toBe(true);
-    const importedBy = graph.edges.importedBy.get('src/utils/math.ts') ?? new Set();
+    const importedBy =
+      graph.edges.importedBy.get('src/utils/math.ts') ?? new Set();
     expect(importedBy.has('src/index.ts')).toBe(true);
   });
 });
@@ -54,7 +59,11 @@ describe('tsconfig path alias pointed at build output (dist/)', () => {
   });
 
   it('produces a graph edge that lands on an actually-analyzed node', async () => {
-    const graph = await buildProjectGraph({ projectRoot, config, useCache: false });
+    const graph = await buildProjectGraph({
+      projectRoot,
+      config,
+      useCache: false,
+    });
 
     const deps = graph.edges.imports.get('src/index.ts') ?? new Set();
     expect(deps.has('pkg/lib/helper.ts')).toBe(true);

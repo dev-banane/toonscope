@@ -13,7 +13,8 @@ function totalBytes(dir: string, onlyYaml: boolean): number {
     for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
       const full = path.join(d, entry.name);
       if (entry.isDirectory()) stack.push(full);
-      else if (!onlyYaml || full.endsWith('.yaml')) total += fs.statSync(full).size;
+      else if (!onlyYaml || full.endsWith('.yaml'))
+        total += fs.statSync(full).size;
     }
   }
   return total;

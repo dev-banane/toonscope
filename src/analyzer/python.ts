@@ -30,7 +30,9 @@ function stringNodeContent(stringNode: any): string {
     (c: any) => c.type === 'string_content'
   );
   if (content) return content.text;
-  return (stringNode.text ?? '').replace(/^([rRbBuUfF]*)("""|'''|"|')/, '').replace(/("""|'''|"|')$/, '');
+  return (stringNode.text ?? '')
+    .replace(/^([rRbBuUfF]*)("""|'''|"|')/, '')
+    .replace(/("""|'''|"|')$/, '');
 }
 
 function leadingDocstring(bodyOrModule: any): string | undefined {
@@ -42,12 +44,18 @@ function leadingDocstring(bodyOrModule: any): string | undefined {
 }
 
 function unwrapDecorated(node: any): { inner: any; decorators: string[] } {
-  if (node.type !== 'decorated_definition') return { inner: node, decorators: [] };
+  if (node.type !== 'decorated_definition')
+    return { inner: node, decorators: [] };
   const decorators: string[] = [];
   for (const c of node.namedChildren ?? []) {
     if (c.type === 'decorator') decorators.push(decoratorName(c));
   }
-  const inner = node.childForFieldName?.('definition') ?? node.namedChildren?.find((c: any) => c.type === 'function_definition' || c.type === 'class_definition');
+  const inner =
+    node.childForFieldName?.('definition') ??
+    node.namedChildren?.find(
+      (c: any) =>
+        c.type === 'function_definition' || c.type === 'class_definition'
+    );
   return { inner, decorators };
 }
 
@@ -55,7 +63,8 @@ function decoratorName(decNode: any): string {
   const inner = decNode.namedChildren?.[0];
   if (!inner) return decNode.text.replace(/^@/, '').trim();
   if (inner.type === 'call') {
-    const fn = inner.childForFieldName?.('function') ?? inner.namedChildren?.[0];
+    const fn =
+      inner.childForFieldName?.('function') ?? inner.namedChildren?.[0];
     return fn?.text ?? inner.text;
   }
   return inner.text;
@@ -77,7 +86,9 @@ function pyParam(node: any): ParamInfo | null {
       // `*args: T` / `**kwargs: T` parse as typed_parameter wrapping a
       // list_splat_pattern/dictionary_splat_pattern, not a bare identifier.
       const splat = node.namedChildren?.find(
-        (c: any) => c.type === 'list_splat_pattern' || c.type === 'dictionary_splat_pattern'
+        (c: any) =>
+          c.type === 'list_splat_pattern' ||
+          c.type === 'dictionary_splat_pattern'
       );
       const type = cleanPyType(node.childForFieldName?.('type'));
       if (splat) {
@@ -87,13 +98,18 @@ function pyParam(node: any): ParamInfo | null {
         if (type) info.type = type;
         return info;
       }
-      const name = node.namedChildren?.find((c: any) => c.type === 'identifier')?.text ?? '';
+      const name =
+        node.namedChildren?.find((c: any) => c.type === 'identifier')?.text ??
+        '';
       const info: ParamInfo = { name };
       if (type) info.type = type;
       return info;
     }
     case 'default_parameter': {
-      const name = node.childForFieldName?.('name')?.text ?? node.namedChildren?.[0]?.text ?? '';
+      const name =
+        node.childForFieldName?.('name')?.text ??
+        node.namedChildren?.[0]?.text ??
+        '';
       const def = node.childForFieldName?.('value')?.text;
       return { name, optional: true, default: def };
     }
@@ -127,7 +143,11 @@ function parsePyParams(paramsNode: any, dropFirst?: boolean): ParamInfo[] {
   const raw = (paramsNode.namedChildren ?? [])
     .map(pyParam)
     .filter((p: ParamInfo | null): p is ParamInfo => Boolean(p && p.name));
-  if (dropFirst && raw.length && (raw[0].name === 'self' || raw[0].name === 'cls')) {
+  if (
+    dropFirst &&
+    raw.length &&
+    (raw[0].name === 'self' || raw[0].name === 'cls')
+  ) {
     return raw.slice(1);
   }
   return raw;
@@ -163,12 +183,18 @@ function functionSignature(
 function basesText(classNode: any): string {
   const superclasses = classNode.childForFieldName?.('superclasses');
   if (!superclasses) return '';
-  return (superclasses.namedChildren ?? [])
-    .map((c: any) => c.text)
-    .join(', ');
+  return (superclasses.namedChildren ?? []).map((c: any) => c.text).join(', ');
 }
 
-const TYPE_LIKE_BASES = ['NamedTuple', 'TypedDict', 'Enum', 'IntEnum', 'StrEnum', 'Flag', 'IntFlag'];
+const TYPE_LIKE_BASES = [
+  'NamedTuple',
+  'TypedDict',
+  'Enum',
+  'IntEnum',
+  'StrEnum',
+  'Flag',
+  'IntFlag',
+];
 
 function classTypeInfo(
   classNode: any,
@@ -180,7 +206,8 @@ function classTypeInfo(
   const bases = basesText(classNode);
   const body = classNode.childForFieldName?.('body');
   const isTypeLike =
-    TYPE_LIKE_BASES.some((b) => bases.includes(b)) || decorators.includes('dataclass');
+    TYPE_LIKE_BASES.some((b) => bases.includes(b)) ||
+    decorators.includes('dataclass');
 
   const fields: string[] = [];
   if (isTypeLike && body) {
@@ -190,11 +217,15 @@ function classTypeInfo(
         if (assign?.type === 'assignment') {
           const left = assign.childForFieldName?.('left');
           const typeNode = assign.childForFieldName?.('type');
-          const valueNode = assign.childForFieldName?.('right') ?? assign.childForFieldName?.('value');
+          const valueNode =
+            assign.childForFieldName?.('right') ??
+            assign.childForFieldName?.('value');
           if (left?.type === 'identifier') {
             const t = cleanPyType(typeNode);
             const v = valueNode?.text;
-            fields.push(t ? `${left.text}: ${t}` : v ? `${left.text} = ${v}` : left.text);
+            fields.push(
+              t ? `${left.text}: ${t}` : v ? `${left.text} = ${v}` : left.text
+            );
           }
         }
       }
@@ -204,13 +235,20 @@ function classTypeInfo(
   return {
     name,
     kind: isTypeLike && bases.includes('Enum') ? 'enum' : 'class',
-    definition: fields.length ? `{ ${fields.join(', ')} }` : bases ? `(${bases})` : '()',
+    definition: fields.length
+      ? `{ ${fields.join(', ')} }`
+      : bases
+        ? `(${bases})`
+        : '()',
     isExported,
     doc,
   };
 }
 
-function resolvePythonModule(projectRoot: string, baseAbs: string): string | null {
+function resolvePythonModule(
+  projectRoot: string,
+  baseAbs: string
+): string | null {
   const candidates = [`${baseAbs}.py`, path.join(baseAbs, '__init__.py')];
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
@@ -238,17 +276,25 @@ function resolveFromImport(params: {
   }
 
   // Prefer resolving `importedName` as a submodule/subpackage.
-  const asSubmodule = resolvePythonModule(projectRoot, path.join(packageDirAbs, importedName));
-  if (asSubmodule) return normalizeProjectRelativePath(projectRoot, asSubmodule);
+  const asSubmodule = resolvePythonModule(
+    projectRoot,
+    path.join(packageDirAbs, importedName)
+  );
+  if (asSubmodule)
+    return normalizeProjectRelativePath(projectRoot, asSubmodule);
 
   // Fall back: `importedName` is an attribute defined inside the target module/package.
   const asModuleItself = resolvePythonModule(projectRoot, packageDirAbs);
-  if (asModuleItself) return normalizeProjectRelativePath(projectRoot, asModuleItself);
+  if (asModuleItself)
+    return normalizeProjectRelativePath(projectRoot, asModuleItself);
 
   return null;
 }
 
-function resolveAbsoluteImport(projectRoot: string, module: string): string | null {
+function resolveAbsoluteImport(
+  projectRoot: string,
+  module: string
+): string | null {
   if (!module) return null;
   const baseAbs = path.join(projectRoot, ...module.split('.'));
   const found = resolvePythonModule(projectRoot, baseAbs);
@@ -305,9 +351,13 @@ export function analyzePython(params: {
       let module = '';
       let level = 0;
       if (moduleNameNode?.type === 'relative_import') {
-        const prefix = moduleNameNode.namedChildren?.find((c: any) => c.type === 'import_prefix');
+        const prefix = moduleNameNode.namedChildren?.find(
+          (c: any) => c.type === 'import_prefix'
+        );
         level = prefix?.text?.length ?? 1;
-        const dotted = moduleNameNode.namedChildren?.find((c: any) => c.type === 'dotted_name');
+        const dotted = moduleNameNode.namedChildren?.find(
+          (c: any) => c.type === 'dotted_name'
+        );
         module = dotted?.text ?? '';
       } else if (moduleNameNode?.type === 'dotted_name') {
         module = moduleNameNode.text;
@@ -317,7 +367,9 @@ export function analyzePython(params: {
       // `module_name` is always the first named child of import_from_statement;
       // comparing node references doesn't work reliably across web-tree-sitter
       // accessors, so skip it positionally instead.
-      const nameNodes = (node.namedChildren ?? []).slice(moduleNameNode ? 1 : 0);
+      const nameNodes = (node.namedChildren ?? []).slice(
+        moduleNameNode ? 1 : 0
+      );
       for (const nameNode of nameNodes) {
         if (nameNode.type === 'wildcard_import') {
           imports.push({
@@ -325,22 +377,43 @@ export function analyzePython(params: {
             resolvedPath:
               level === 0
                 ? resolveAbsoluteImport(projectRoot, module)
-                : resolveFromImport({ projectRoot, absPath, module, level, importedName: '' }),
+                : resolveFromImport({
+                    projectRoot,
+                    absPath,
+                    module,
+                    level,
+                    importedName: '',
+                  }),
             names: ['*'],
             isTypeOnly: false,
           });
-        } else if (nameNode.type === 'dotted_name' || nameNode.type === 'aliased_import') {
+        } else if (
+          nameNode.type === 'dotted_name' ||
+          nameNode.type === 'aliased_import'
+        ) {
           const isAliased = nameNode.type === 'aliased_import';
-          const importedNode = isAliased ? nameNode.childForFieldName?.('name') : nameNode;
-          const aliasNode = isAliased ? nameNode.childForFieldName?.('alias') : undefined;
+          const importedNode = isAliased
+            ? nameNode.childForFieldName?.('name')
+            : nameNode;
+          const aliasNode = isAliased
+            ? nameNode.childForFieldName?.('alias')
+            : undefined;
           const importedName = importedNode?.text ?? '';
           const localName = aliasNode?.text ?? importedName;
 
           const resolvedPath =
             level === 0
-              ? resolveAbsoluteImport(projectRoot, module ? `${module}.${importedName}` : importedName) ??
-                resolveAbsoluteImport(projectRoot, module)
-              : resolveFromImport({ projectRoot, absPath, module, level, importedName });
+              ? (resolveAbsoluteImport(
+                  projectRoot,
+                  module ? `${module}.${importedName}` : importedName
+                ) ?? resolveAbsoluteImport(projectRoot, module))
+              : resolveFromImport({
+                  projectRoot,
+                  absPath,
+                  module,
+                  level,
+                  importedName,
+                });
 
           imports.push({
             source: `${'.'.repeat(level)}${module}`,
@@ -358,13 +431,23 @@ export function analyzePython(params: {
       if (assign?.type === 'assignment') {
         const left = assign.childForFieldName?.('left');
         const right = assign.childForFieldName?.('right');
-        if (left?.type === 'identifier' && left.text === '__all__' && right?.type === 'list') {
+        if (
+          left?.type === 'identifier' &&
+          left.text === '__all__' &&
+          right?.type === 'list'
+        ) {
           explicitAll = (right.namedChildren ?? [])
             .filter((c: any) => c.type === 'string')
             .map((c: any) => stringNodeContent(c));
-        } else if (left?.type === 'identifier' && /^[A-Z][A-Z0-9_]*$/.test(left.text)) {
+        } else if (
+          left?.type === 'identifier' &&
+          /^[A-Z][A-Z0-9_]*$/.test(left.text)
+        ) {
           topLevelSymbols.set(left.text, 'const');
-        } else if (left?.type === 'identifier' && assign.childForFieldName?.('type')?.text === 'TypeAlias') {
+        } else if (
+          left?.type === 'identifier' &&
+          assign.childForFieldName?.('type')?.text === 'TypeAlias'
+        ) {
           types.push({
             name: left.text,
             kind: 'type',
@@ -391,18 +474,22 @@ export function analyzePython(params: {
       const name = inner.childForFieldName?.('name')?.text ?? '';
       if (!name) continue;
       topLevelSymbols.set(name, 'class');
-      const classDoc = firstDocLine(leadingDocstring(inner.childForFieldName?.('body')));
+      const classDoc = firstDocLine(
+        leadingDocstring(inner.childForFieldName?.('body'))
+      );
       types.push(classTypeInfo(inner, true, classDoc, decorators));
 
       const body = inner.childForFieldName?.('body');
       for (const member of body?.namedChildren ?? []) {
-        const { inner: methodNode, decorators: methodDecorators } = unwrapDecorated(member);
+        const { inner: methodNode, decorators: methodDecorators } =
+          unwrapDecorated(member);
         if (!methodNode || methodNode.type !== 'function_definition') continue;
 
         const methodName = methodNode.childForFieldName?.('name')?.text ?? '';
         if (!methodName) continue;
 
-        const isDunder = methodName.startsWith('__') && methodName.endsWith('__');
+        const isDunder =
+          methodName.startsWith('__') && methodName.endsWith('__');
         if (isDunder && methodName !== '__init__') continue;
         if (!isDunder && methodName.startsWith('_')) continue;
 
@@ -428,7 +515,11 @@ export function analyzePython(params: {
   const exports: ExportInfo[] = [];
   if (explicitAll) {
     for (const name of explicitAll) {
-      exports.push({ name, kind: topLevelSymbols.get(name) ?? 'const', isDefault: false });
+      exports.push({
+        name,
+        kind: topLevelSymbols.get(name) ?? 'const',
+        isDefault: false,
+      });
     }
   } else {
     for (const [name, kind] of topLevelSymbols) {
@@ -446,7 +537,14 @@ export function analyzePython(params: {
   }
 
   const fileType = detectPythonFileType({ absPath, relPath, exports });
-  const summary = pythonSummary({ relPath, fileType, moduleDoc, exports, signatures, types });
+  const summary = pythonSummary({
+    relPath,
+    fileType,
+    moduleDoc,
+    exports,
+    signatures,
+    types,
+  });
 
   return { exports, imports, signatures, types, summary, fileType };
 }
@@ -454,7 +552,11 @@ export function analyzePython(params: {
 function containsYield(node: any): boolean {
   if (!node) return false;
   if (node.type === 'yield') return true;
-  if (node.type === 'function_definition' || node.type === 'class_definition' || node.type === 'lambda') {
+  if (
+    node.type === 'function_definition' ||
+    node.type === 'class_definition' ||
+    node.type === 'lambda'
+  ) {
     return false;
   }
   for (const c of node.children ?? []) {
@@ -471,10 +573,19 @@ export function detectPythonFileType(params: {
   const lower = params.relPath.toLowerCase();
   const base = path.basename(lower);
 
-  if (/^test_.*\.py$/.test(base) || /_test\.py$/.test(base) || lower.includes('/tests/'))
+  if (
+    /^test_.*\.py$/.test(base) ||
+    /_test\.py$/.test(base) ||
+    lower.includes('/tests/')
+  )
     return 'test';
   if (base === 'models.py' || lower.includes('/models/')) return 'model';
-  if (base === 'settings.py' || base === 'config.py' || lower.includes('/config/')) return 'config';
+  if (
+    base === 'settings.py' ||
+    base === 'config.py' ||
+    lower.includes('/config/')
+  )
+    return 'config';
   if (
     base === 'views.py' ||
     base === 'routes.py' ||
@@ -510,7 +621,9 @@ function pythonSummary(params: {
       return `Route/API module exposing ${names.join(', ') || 'nothing'}.`;
     default: {
       const mainSig = signatures.find((s) => s.isExported);
-      const arity = mainSig ? ` (${mainSig.params.length} arg${mainSig.params.length === 1 ? '' : 's'})` : '';
+      const arity = mainSig
+        ? ` (${mainSig.params.length} arg${mainSig.params.length === 1 ? '' : 's'})`
+        : '';
       return `Module exporting ${names.join(', ') || 'nothing'}${names.length && mainSig ? arity : ''}.`;
     }
   }

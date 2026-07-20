@@ -22,7 +22,8 @@ npm run build      # compile with tsup, writes to dist/
 npm run dev         # tsup in watch mode
 npm test             # vitest in watch mode
 npm run test:run     # vitest, single run (this is what CI/prepublish uses)
-npm run lint          # eslint src/
+npm run format        # prettier --write, formats the whole repo
+npm run format:check   # prettier --check, what CI runs
 ```
 
 To try your changes against a real project without publishing anything,
@@ -72,10 +73,10 @@ for the most recently added example, then update:
 
 ## Before opening a PR
 
-- `npm run test:run` and `npm run lint` should both pass.
-- `npx tsc --noEmit` should be clean for anything under `src/` (the
-  `test/fixtures/broken-syntax` fixture is intentionally invalid and is
-  expected to fail typecheck; that's fine).
+- `npm run test:run` should pass.
+- `npx tsc --noEmit` should be clean (test fixtures are excluded from the
+  TypeScript project on purpose, some are intentionally invalid).
+- `npm run format:check` should pass; run `npm run format` if it doesn't.
 - Add or update tests for behavior you changed. The existing suite under
   `test/` is the best template for style and structure.
 - Keep changes scoped. A bug fix doesn't need an accompanying refactor,

@@ -117,7 +117,10 @@ export async function runSummarization(
         );
         results.set(task.path, summary);
       } catch (err) {
-        failures.set(task.path, err instanceof Error ? err.message : String(err));
+        failures.set(
+          task.path,
+          err instanceof Error ? err.message : String(err)
+        );
       } finally {
         completed += 1;
         onProgress?.(completed, total, task.path);

@@ -78,7 +78,10 @@ function readJsonc(filePath: string): any | null {
   }
 }
 
-function resolveExtendsPath(fromDir: string, extendsValue: string): string | null {
+function resolveExtendsPath(
+  fromDir: string,
+  extendsValue: string
+): string | null {
   let p = extendsValue;
   if (!p.startsWith('.') && !path.isAbsolute(p)) {
     return null;
@@ -120,7 +123,10 @@ function loadTsconfig(configPath: string): ParsedTsconfig | null {
   return result;
 }
 
-function findNearestTsconfig(startDir: string, projectRoot: string): string | null {
+function findNearestTsconfig(
+  startDir: string,
+  projectRoot: string
+): string | null {
   const cacheKey = startDir;
   const cached = nearestConfigCache.get(cacheKey);
   if (cached !== undefined) return cached;
@@ -172,7 +178,8 @@ function candidatesForBase(base: string): string[] {
     else if (ext === '.cjs') out.push(`${stem}.cts`);
   } else {
     for (const e of EXTENSIONLESS_CANDIDATES) out.push(`${base}${e}`);
-    for (const e of EXTENSIONLESS_CANDIDATES) out.push(path.join(base, `index${e}`));
+    for (const e of EXTENSIONLESS_CANDIDATES)
+      out.push(path.join(base, `index${e}`));
   }
   return out;
 }

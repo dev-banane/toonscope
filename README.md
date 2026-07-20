@@ -94,13 +94,13 @@ npx toonscope key set google      # or: anthropic, openai, mistral. Stores the k
 npx toonscope generate --summarize
 ```
 
-| Provider    | Env var(s)                          | Default model           |
-| ----------- | ------------------------------------ | ------------------------ |
-| `google`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`  | `gemini-2.5-flash`       |
-| `anthropic` | `ANTHROPIC_API_KEY`                  | `claude-haiku-4-5`       |
-| `openai`    | `OPENAI_API_KEY`                     | `gpt-4.1-mini`           |
-| `mistral`   | `MISTRAL_API_KEY`                    | `mistral-small-latest`   |
-| `ollama`    | *(none, runs locally)*               | `llama3.2`               |
+| Provider    | Env var(s)                          | Default model          |
+| ----------- | ----------------------------------- | ---------------------- |
+| `google`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | `gemini-2.5-flash`     |
+| `anthropic` | `ANTHROPIC_API_KEY`                 | `claude-haiku-4-5`     |
+| `openai`    | `OPENAI_API_KEY`                    | `gpt-4.1-mini`         |
+| `mistral`   | `MISTRAL_API_KEY`                   | `mistral-small-latest` |
+| `ollama`    | _(none, runs locally)_              | `llama3.2`             |
 
 Key resolution order: `--api-key` flag, then a provider env var (or the
 generic `TOONSCOPE_API_KEY`), then `toonscope key set` (user-level config),
@@ -111,16 +111,16 @@ that file's template summary.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `toonscope init` | Detect the project, write `.toonscope.yaml`, optionally configure AI summaries and integration files, optionally run the first `generate`. |
-| `toonscope generate` | Analyze the codebase and write `.toon/`. Incremental by default (reuses `.toon/cache.json` for unchanged files); `--force` for a full rebuild. `--summarize` enables AI summaries; `--vault <path>` also writes a memory file for tools that read one. |
-| `toonscope check` | Verify `.toon/` is current against source, no rebuild, just a content-hash comparison. Exits 0 when up to date, 1 (with a list of stale/new/removed files) otherwise. This is what agents are instructed to run before trusting `.toon/`. |
-| `toonscope scope <file> --depth 2` | Print (or `--out` a file with) a merged YAML view of one file plus its dependency neighbors out to `--depth` hops, useful for a focused read without the whole `.toon/` tree. |
-| `toonscope stats` | Print raw vs. compressed token counts and the reduction percentage. |
-| `toonscope watch` | Rebuild `.toon/` incrementally as files change. |
-| `toonscope clean` | Remove `.toon/` (keeps `.toonscope.yaml`). `--integrations` also strips the managed blocks from AGENTS.md/etc. and deletes the generated cursor/windsurf rule files. |
-| `toonscope key set / list / remove <provider>` | Manage stored AI provider API keys. |
+| Command                                        | What it does                                                                                                                                                                                                                                           |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `toonscope init`                               | Detect the project, write `.toonscope.yaml`, optionally configure AI summaries and integration files, optionally run the first `generate`.                                                                                                             |
+| `toonscope generate`                           | Analyze the codebase and write `.toon/`. Incremental by default (reuses `.toon/cache.json` for unchanged files); `--force` for a full rebuild. `--summarize` enables AI summaries; `--vault <path>` also writes a memory file for tools that read one. |
+| `toonscope check`                              | Verify `.toon/` is current against source, no rebuild, just a content-hash comparison. Exits 0 when up to date, 1 (with a list of stale/new/removed files) otherwise. This is what agents are instructed to run before trusting `.toon/`.              |
+| `toonscope scope <file> --depth 2`             | Print (or `--out` a file with) a merged YAML view of one file plus its dependency neighbors out to `--depth` hops, useful for a focused read without the whole `.toon/` tree.                                                                          |
+| `toonscope stats`                              | Print raw vs. compressed token counts and the reduction percentage.                                                                                                                                                                                    |
+| `toonscope watch`                              | Rebuild `.toon/` incrementally as files change.                                                                                                                                                                                                        |
+| `toonscope clean`                              | Remove `.toon/` (keeps `.toonscope.yaml`). `--integrations` also strips the managed blocks from AGENTS.md/etc. and deletes the generated cursor/windsurf rule files.                                                                                   |
+| `toonscope key set / list / remove <provider>` | Manage stored AI provider API keys.                                                                                                                                                                                                                    |
 
 Every command accepts `--quiet` (essentials only), `--json` (machine
 readable output), and `--no-color`.
@@ -218,16 +218,16 @@ Measured, not estimated: two data points, one small and one large.
 **A 968-file real-world monorepo** (Next.js app + Node server + shared
 TypeScript packages, several `tsconfig.json`s with path aliases):
 
-| | |
-| --- | --- |
-| Files analyzed | 968 |
-| Cold `generate` (no cache) | 15.1s |
-| Warm `generate` (nothing changed) | 6.8s (~2x faster) |
-| Parse phase, cold to warm | 5.8s to 0.3s (~19x faster) |
-| Token reduction | 49.1% (1.92M to 975K tokens) |
-| Peak memory | 134.5 MB |
-| Parse errors | 0 |
-| `@/`- and workspace-alias imports resolved | all of them |
+|                                            |                              |
+| ------------------------------------------ | ---------------------------- |
+| Files analyzed                             | 968                          |
+| Cold `generate` (no cache)                 | 15.1s                        |
+| Warm `generate` (nothing changed)          | 6.8s (~2x faster)            |
+| Parse phase, cold to warm                  | 5.8s to 0.3s (~19x faster)   |
+| Token reduction                            | 49.1% (1.92M to 975K tokens) |
+| Peak memory                                | 134.5 MB                     |
+| Parse errors                               | 0                            |
+| `@/`- and workspace-alias imports resolved | all of them                  |
 
 ## Large-repo notes
 

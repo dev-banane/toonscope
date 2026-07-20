@@ -40,18 +40,19 @@ describe('resilience to unparseable source files', () => {
         await importOriginal<typeof import('../src/analyzer/index')>();
       return {
         ...actual,
-        analyzeFile: vi.fn(async (params: Parameters<typeof actual.analyzeFile>[0]) => {
-          if (params.absPath.replace(/\\/g, '/').endsWith('src/broken.ts')) {
-            throw new Error('simulated analyzer crash');
+        analyzeFile: vi.fn(
+          async (params: Parameters<typeof actual.analyzeFile>[0]) => {
+            if (params.absPath.replace(/\\/g, '/').endsWith('src/broken.ts')) {
+              throw new Error('simulated analyzer crash');
+            }
+            return actual.analyzeFile(params);
           }
-          return actual.analyzeFile(params);
-        }),
+        ),
       };
     });
 
-    const { generateContext: generateContextMocked } = await import(
-      '../src/compiler/index'
-    );
+    const { generateContext: generateContextMocked } =
+      await import('../src/compiler/index');
     const ctx = await generateContextMocked(projectRoot, config);
 
     expect(ctx.graph['src/broken.ts']).toBeUndefined();
