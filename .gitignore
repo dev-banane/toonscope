@@ -32,3 +32,5 @@ CLAUDE.md
 GEMINI.md
 .cursor/
 .windsurf/
+
+/benchmark/results/

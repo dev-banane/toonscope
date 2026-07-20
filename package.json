@@ -19,6 +19,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "benchmark": "tsx benchmark/run.ts",
+    "benchmark:agent": "tsx benchmark/agent-bench.ts",
+    "benchmark:agent-cli": "tsx benchmark/agent-cli-bench.ts",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build && npm run test:run"
   },
