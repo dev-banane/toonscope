@@ -47,7 +47,9 @@ describe('C++ analyzer', () => {
     );
     expect(distance.params.map((p) => p.name)).toEqual(['a', 'b']);
 
-    const localInclude = analysis.imports.find((i) => i.source === 'point.hpp')!;
+    const localInclude = analysis.imports.find(
+      (i) => i.source === 'point.hpp'
+    )!;
     expect(localInclude.resolvedPath).toBe('point.hpp');
   });
 

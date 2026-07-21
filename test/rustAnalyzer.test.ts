@@ -19,9 +19,7 @@ describe('Rust analyzer', () => {
       ['Color', 'Point', 'Shape', 'add_points'].sort()
     );
 
-    const addPoints = analysis.signatures.find(
-      (s) => s.name === 'add_points'
-    )!;
+    const addPoints = analysis.signatures.find((s) => s.name === 'add_points')!;
     expect(addPoints.doc).toBe('Adds two points together.');
     expect(addPoints.params.map((p) => p.name)).toEqual(['a', 'b']);
     expect(addPoints.returnType).toBe('Point');

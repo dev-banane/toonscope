@@ -44,9 +44,9 @@ describe('Kotlin analyzer', () => {
     expect(color.kind).toBe('enum');
     expect(color.definition).toContain('RED');
 
-    expect(
-      analysis.imports.some((i) => i.source === 'kotlin.math.PI')
-    ).toBe(true);
+    expect(analysis.imports.some((i) => i.source === 'kotlin.math.PI')).toBe(
+      true
+    );
   });
 
   it('detects files under a test/ dir as test type', async () => {

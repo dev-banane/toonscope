@@ -188,7 +188,8 @@ function analyzeGo(ctx: Ctx): GenericAnalysisResult {
         isExported,
         doc: leadingDoc(node),
       });
-      if (isExported) exports.push({ name, kind: 'function', isDefault: false });
+      if (isExported)
+        exports.push({ name, kind: 'function', isDefault: false });
       continue;
     }
 
@@ -285,7 +286,13 @@ function parseRustUsePath(raw: string): { basePath: string; names: string[] } {
     const base = braceMatch[1];
     const names = braceMatch[2]
       .split(',')
-      .map((s) => s.trim().split(/\s+as\s+/).pop()!.trim())
+      .map((s) =>
+        s
+          .trim()
+          .split(/\s+as\s+/)
+          .pop()!
+          .trim()
+      )
       .filter(Boolean);
     return { basePath: base, names };
   }
@@ -373,7 +380,10 @@ function analyzeRust(ctx: Ctx): GenericAnalysisResult {
 
   for (const node of children(rootNode)) {
     if (node.type === 'use_declaration') {
-      const raw = node.text.replace(/^use\s+/, '').replace(/;$/, '').trim();
+      const raw = node.text
+        .replace(/^use\s+/, '')
+        .replace(/;$/, '')
+        .trim();
       const { basePath, names } = parseRustUsePath(raw);
       imports.push({
         source: raw,
@@ -620,7 +630,8 @@ function analyzeCLike(ctx: Ctx, opts: { cpp: boolean }): GenericAnalysisResult {
           kind = 'enum';
           const members: string[] = [];
           for (const e of children(body))
-            if (e.type === 'enumerator') members.push(fieldText(e, 'name') ?? '');
+            if (e.type === 'enumerator')
+              members.push(fieldText(e, 'name') ?? '');
           definition = members.filter(Boolean).join(' | ') || '{}';
         } else {
           const fields: string[] = [];
@@ -658,7 +669,10 @@ function analyzeCLike(ctx: Ctx, opts: { cpp: boolean }): GenericAnalysisResult {
         const body = node.childForFieldName?.('body');
         const fields: string[] = [];
         for (const member of children(body)) {
-          if (member.type === 'field_declaration' || member.type === 'declaration') {
+          if (
+            member.type === 'field_declaration' ||
+            member.type === 'declaration'
+          ) {
             const declarator = member.childForFieldName?.('declarator');
             const fnDeclarator =
               declarator?.type === 'function_declarator' ? declarator : null;
@@ -743,7 +757,9 @@ function csParams(node: any): ParamInfo[] {
 }
 
 function hasModifierCs(node: any, mod: string): boolean {
-  return children(node).some((c: any) => c.type === 'modifier' && c.text === mod);
+  return children(node).some(
+    (c: any) => c.type === 'modifier' && c.text === mod
+  );
 }
 
 function analyzeCSharp(ctx: Ctx): GenericAnalysisResult {
@@ -810,7 +826,12 @@ function analyzeCSharp(ctx: Ctx): GenericAnalysisResult {
     if (isExported)
       exports.push({
         name,
-        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        kind:
+          kind === 'interface'
+            ? 'interface'
+            : kind === 'enum'
+              ? 'enum'
+              : 'class',
         isDefault: false,
       });
     if (body) walkBody(body, name, isExported);
@@ -864,7 +885,8 @@ function analyzeCSharp(ctx: Ctx): GenericAnalysisResult {
 function javaParams(paramList: any): ParamInfo[] {
   const out: ParamInfo[] = [];
   for (const p of children(paramList)) {
-    if (p.type !== 'formal_parameter' && p.type !== 'spread_parameter') continue;
+    if (p.type !== 'formal_parameter' && p.type !== 'spread_parameter')
+      continue;
     const name = fieldText(p, 'name') ?? '';
     if (!name) continue;
     const type = fieldText(p, 'type');
@@ -948,7 +970,8 @@ function analyzeJava(ctx: Ctx): GenericAnalysisResult {
     if (node.type === 'enum_declaration' && body) {
       const constants: string[] = [];
       for (const c of children(body))
-        if (c.type === 'enum_constant') constants.push(fieldText(c, 'name') ?? '');
+        if (c.type === 'enum_constant')
+          constants.push(fieldText(c, 'name') ?? '');
       definition = constants.filter(Boolean).join(' | ') || '{}';
     } else if (body) {
       const members: string[] = [];
@@ -969,12 +992,22 @@ function analyzeJava(ctx: Ctx): GenericAnalysisResult {
     if (isExported)
       exports.push({
         name,
-        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        kind:
+          kind === 'interface'
+            ? 'interface'
+            : kind === 'enum'
+              ? 'enum'
+              : 'class',
         isDefault: false,
       });
 
     if (body)
-      walkClassBody(body, name, isExported, node.type === 'interface_declaration');
+      walkClassBody(
+        body,
+        name,
+        isExported,
+        node.type === 'interface_declaration'
+      );
   }
 
   for (const node of children(rootNode)) {
@@ -1035,7 +1068,8 @@ function kotlinFunctionParts(node: any): {
   returnTypeNode: any;
 } {
   const named = children(node);
-  const name = named.find((c: any) => c.type === 'simple_identifier')?.text ?? '';
+  const name =
+    named.find((c: any) => c.type === 'simple_identifier')?.text ?? '';
   const paramsNode = named.find(
     (c: any) => c.type === 'function_value_parameters'
   );
@@ -1070,7 +1104,11 @@ function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
       : null;
   }
 
-  function walkClassBody(body: any, className: string, isTypeExported: boolean) {
+  function walkClassBody(
+    body: any,
+    className: string,
+    isTypeExported: boolean
+  ) {
     for (const member of children(body)) {
       if (member.type !== 'function_declaration') continue;
       const { name, paramsNode, returnTypeNode } = kotlinFunctionParts(member);
@@ -1121,7 +1159,8 @@ function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
         isExported,
         doc: leadingDoc(node),
       });
-      if (isExported) exports.push({ name, kind: 'function', isDefault: false });
+      if (isExported)
+        exports.push({ name, kind: 'function', isDefault: false });
       continue;
     }
 
@@ -1131,14 +1170,21 @@ function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
       const name =
         named.find((c: any) => c.type === 'type_identifier')?.text ?? '';
       if (!name) continue;
-      const kind: TypeInfo['kind'] = keyword === 'interface' ? 'interface' : keyword === 'enum' ? 'enum' : 'class';
+      const kind: TypeInfo['kind'] =
+        keyword === 'interface'
+          ? 'interface'
+          : keyword === 'enum'
+            ? 'enum'
+            : 'class';
       const isExported = !hasKotlinModifier(node, 'private');
       const body = named.find(
         (c: any) => c.type === 'class_body' || c.type === 'enum_class_body'
       );
 
       const props: string[] = [];
-      const primaryCtor = named.find((c: any) => c.type === 'primary_constructor');
+      const primaryCtor = named.find(
+        (c: any) => c.type === 'primary_constructor'
+      );
       if (primaryCtor) {
         for (const param of children(primaryCtor)) {
           if (param.type !== 'class_parameter') continue;
@@ -1175,7 +1221,12 @@ function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
       if (isExported)
         exports.push({
           name,
-          kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+          kind:
+            kind === 'interface'
+              ? 'interface'
+              : kind === 'enum'
+                ? 'enum'
+                : 'class',
           isDefault: false,
         });
 
@@ -1242,7 +1293,11 @@ function analyzeRuby(ctx: Ctx): GenericAnalysisResult {
     if (!name) return;
     signatures.push({
       name: className ? `${className}.${name}` : name,
-      kind: className ? (name === 'initialize' ? 'constructor' : 'method') : 'function',
+      kind: className
+        ? name === 'initialize'
+          ? 'constructor'
+          : 'method'
+        : 'function',
       className,
       params: rubyParams(node.childForFieldName?.('parameters')),
       isAsync: false,
@@ -1272,7 +1327,12 @@ function analyzeRuby(ctx: Ctx): GenericAnalysisResult {
                 candidate
               );
           }
-          imports.push({ source: raw, resolvedPath, names: [], isTypeOnly: false });
+          imports.push({
+            source: raw,
+            resolvedPath,
+            names: [],
+            isTypeOnly: false,
+          });
         }
         continue;
       }
@@ -1337,7 +1397,10 @@ function swiftParamsFrom(paramNodes: any[]): ParamInfo[] {
 function swiftFunctionSignature(returnTypeSkipName: any[]): any {
   return returnTypeSkipName
     .filter(
-      (c: any) => c.type !== 'parameter' && c.type !== 'simple_identifier' && !/modifier/i.test(c.type)
+      (c: any) =>
+        c.type !== 'parameter' &&
+        c.type !== 'simple_identifier' &&
+        !/modifier/i.test(c.type)
     )
     .pop();
 }
@@ -1387,7 +1450,8 @@ function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
         isExported,
         doc: leadingDoc(node),
       });
-      if (isExported) exports.push({ name, kind: 'function', isDefault: false });
+      if (isExported)
+        exports.push({ name, kind: 'function', isDefault: false });
       continue;
     }
 
@@ -1414,7 +1478,9 @@ function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
             );
             if (pname)
               props.push(
-                typeAnn ? `${pname}: ${typeAnn.text.replace(/^:\s*/, '')}` : pname
+                typeAnn
+                  ? `${pname}: ${typeAnn.text.replace(/^:\s*/, '')}`
+                  : pname
               );
           } else if (
             member.type === 'function_declaration' ||
@@ -1424,18 +1490,18 @@ function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
             const mname =
               member.type === 'init_declaration'
                 ? 'init'
-                : fieldText(member, 'name') ?? '';
+                : (fieldText(member, 'name') ?? '');
             if (!mname) continue;
             const mBodyIdx = mnamed.findIndex(
               (c: any) => c.type === 'function_body'
             );
-            const mBefore =
-              mBodyIdx >= 0 ? mnamed.slice(0, mBodyIdx) : mnamed;
+            const mBefore = mBodyIdx >= 0 ? mnamed.slice(0, mBodyIdx) : mnamed;
             const mParams = mBefore.filter((c: any) => c.type === 'parameter');
             const mReturn = swiftFunctionSignature(mBefore);
             signatures.push({
               name: `${name}.${mname}`,
-              kind: member.type === 'init_declaration' ? 'constructor' : 'method',
+              kind:
+                member.type === 'init_declaration' ? 'constructor' : 'method',
               className: name,
               params: swiftParamsFrom(mParams),
               returnType:
@@ -1455,7 +1521,9 @@ function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
         name,
         kind,
         definition:
-          kind === 'enum' ? props.join(' | ') || '{}' : `{ ${props.join(', ')} }`,
+          kind === 'enum'
+            ? props.join(' | ') || '{}'
+            : `{ ${props.join(', ')} }`,
         isExported,
         doc: leadingDoc(node),
       });
@@ -1622,7 +1690,12 @@ function analyzePhp(ctx: Ctx): GenericAnalysisResult {
       });
       exports.push({
         name,
-        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        kind:
+          kind === 'interface'
+            ? 'interface'
+            : kind === 'enum'
+              ? 'enum'
+              : 'class',
         isDefault: false,
       });
       continue;

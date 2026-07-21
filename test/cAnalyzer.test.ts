@@ -19,9 +19,7 @@ describe('C analyzer', () => {
       ['Color', 'add_points'].sort()
     );
 
-    const addPoints = analysis.signatures.find(
-      (s) => s.name === 'add_points'
-    )!;
+    const addPoints = analysis.signatures.find((s) => s.name === 'add_points')!;
     expect(addPoints.doc).toBe('add_points sums two points.');
     expect(addPoints.params.map((p) => p.name)).toEqual(['a', 'b']);
     expect(addPoints.returnType).toBe('struct Point');
