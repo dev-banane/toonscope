@@ -27,6 +27,7 @@ export function isProbablySourceFile(
     return languages.includes('cpp');
   if (ext === '.cs') return languages.includes('csharp');
   if (ext === '.java') return languages.includes('java');
+  if (ext === '.kt' || ext === '.kts') return languages.includes('kotlin');
   return false;
 }
 

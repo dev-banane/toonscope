@@ -7,7 +7,8 @@ export type Language =
   | 'c'
   | 'cpp'
   | 'csharp'
-  | 'java';
+  | 'java'
+  | 'kotlin';
 
 export interface ToonConfig {
   include: string[];

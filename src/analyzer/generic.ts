@@ -1012,6 +1012,187 @@ function analyzeJava(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- Kotlin ----------
+
+function kotlinParams(paramsNode: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(paramsNode)) {
+    if (p.type !== 'parameter') continue;
+    const named = children(p);
+    const name = named[0]?.text ?? '';
+    if (!name) continue;
+    const typeNode = named[1];
+    const info: ParamInfo = { name };
+    if (typeNode) info.type = typeNode.text;
+    out.push(info);
+  }
+  return out;
+}
+
+function kotlinFunctionParts(node: any): {
+  name: string;
+  paramsNode: any;
+  returnTypeNode: any;
+} {
+  const named = children(node);
+  const name = named.find((c: any) => c.type === 'simple_identifier')?.text ?? '';
+  const paramsNode = named.find(
+    (c: any) => c.type === 'function_value_parameters'
+  );
+  const bodyIdx = named.findIndex((c: any) => c.type === 'function_body');
+  const paramsIdx = named.indexOf(paramsNode);
+  const between = named.slice(
+    paramsIdx + 1,
+    bodyIdx >= 0 ? bodyIdx : named.length
+  );
+  const returnTypeNode = between[0] ?? null;
+  return { name, paramsNode, returnTypeNode };
+}
+
+function hasKotlinModifier(node: any, mod: string): boolean {
+  const modifiers = children(node).find((c: any) => c.type === 'modifiers');
+  if (!modifiers) return false;
+  return modifiers.text.includes(mod);
+}
+
+function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, relPath, projectRoot } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  function resolveKotlinImport(dotted: string): string | null {
+    const parts = dotted.split('.');
+    const withExt = path.join(projectRoot, ...parts) + '.kt';
+    return fs.existsSync(withExt)
+      ? normalizeProjectRelativePath(projectRoot, withExt)
+      : null;
+  }
+
+  function walkClassBody(body: any, className: string, isTypeExported: boolean) {
+    for (const member of children(body)) {
+      if (member.type !== 'function_declaration') continue;
+      const { name, paramsNode, returnTypeNode } = kotlinFunctionParts(member);
+      if (!name) continue;
+      const isPrivate = hasKotlinModifier(member, 'private');
+      signatures.push({
+        name: `${className}.${name}`,
+        kind: 'method',
+        className,
+        params: kotlinParams(paramsNode),
+        returnType: returnTypeNode?.text,
+        isAsync: false,
+        isGenerator: false,
+        isExported: isTypeExported && !isPrivate,
+        doc: leadingDoc(member),
+      });
+    }
+  }
+
+  for (const node of children(rootNode)) {
+    if (node.type === 'import_list') {
+      for (const header of children(node)) {
+        if (header.type !== 'import_header') continue;
+        const idNode = children(header)[0];
+        const dotted = idNode?.text ?? '';
+        const nameSeg = dotted.split('.').pop() ?? dotted;
+        imports.push({
+          source: dotted,
+          resolvedPath: resolveKotlinImport(dotted),
+          names: nameSeg ? [nameSeg] : [],
+          isTypeOnly: false,
+        });
+      }
+      continue;
+    }
+
+    if (node.type === 'function_declaration') {
+      const { name, paramsNode, returnTypeNode } = kotlinFunctionParts(node);
+      if (!name) continue;
+      const isExported = !hasKotlinModifier(node, 'private');
+      signatures.push({
+        name,
+        kind: 'function',
+        params: kotlinParams(paramsNode),
+        returnType: returnTypeNode?.text,
+        isAsync: false,
+        isGenerator: false,
+        isExported,
+        doc: leadingDoc(node),
+      });
+      if (isExported) exports.push({ name, kind: 'function', isDefault: false });
+      continue;
+    }
+
+    if (node.type === 'class_declaration') {
+      const keyword = node.child(0)?.type ?? 'class';
+      const named = children(node);
+      const name =
+        named.find((c: any) => c.type === 'type_identifier')?.text ?? '';
+      if (!name) continue;
+      const kind: TypeInfo['kind'] = keyword === 'interface' ? 'interface' : keyword === 'enum' ? 'enum' : 'class';
+      const isExported = !hasKotlinModifier(node, 'private');
+      const body = named.find(
+        (c: any) => c.type === 'class_body' || c.type === 'enum_class_body'
+      );
+
+      const props: string[] = [];
+      const primaryCtor = named.find((c: any) => c.type === 'primary_constructor');
+      if (primaryCtor) {
+        for (const param of children(primaryCtor)) {
+          if (param.type !== 'class_parameter') continue;
+          const pname = children(param).find(
+            (c: any) => c.type === 'simple_identifier'
+          )?.text;
+          const ptype = children(param).find(
+            (c: any) => c.type === 'user_type'
+          )?.text;
+          if (pname) props.push(ptype ? `${pname}: ${ptype}` : pname);
+        }
+      }
+      if (kind === 'enum' && body) {
+        const entries = children(body)
+          .filter((c: any) => c.type === 'enum_entry')
+          .map((c: any) => children(c)[0]?.text)
+          .filter(Boolean);
+        types.push({
+          name,
+          kind,
+          definition: entries.join(' | ') || '{}',
+          isExported,
+          doc: leadingDoc(node),
+        });
+      } else {
+        types.push({
+          name,
+          kind,
+          definition: `{ ${props.join(', ')} }`,
+          isExported,
+          doc: leadingDoc(node),
+        });
+      }
+      if (isExported)
+        exports.push({
+          name,
+          kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+          isDefault: false,
+        });
+
+      if (body) walkClassBody(body, name, isExported);
+      continue;
+    }
+  }
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /tests?\.kt$/i,
+    testDirRegex: /\/test\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -1031,6 +1212,8 @@ export function analyzeGeneric(
       return analyzeCSharp(ctx);
     case 'java':
       return analyzeJava(ctx);
+    case 'kotlin':
+      return analyzeKotlin(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

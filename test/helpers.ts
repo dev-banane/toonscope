@@ -31,6 +31,7 @@ export function defaultTestConfig(projectRoot: string): ToonConfig {
       'cpp',
       'csharp',
       'java',
+      'kotlin',
     ],
     splitThreshold: 15,
   };
