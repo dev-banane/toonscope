@@ -28,6 +28,7 @@ export function isProbablySourceFile(
   if (ext === '.cs') return languages.includes('csharp');
   if (ext === '.java') return languages.includes('java');
   if (ext === '.kt' || ext === '.kts') return languages.includes('kotlin');
+  if (ext === '.rb') return languages.includes('ruby');
   return false;
 }
 

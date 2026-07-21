@@ -49,6 +49,7 @@ const EXT_LANGUAGE: Record<string, Language> = {
   '.java': 'java',
   '.kt': 'kotlin',
   '.kts': 'kotlin',
+  '.rb': 'ruby',
 };
 
 export async function detectLanguages(

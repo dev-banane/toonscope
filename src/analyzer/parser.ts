@@ -13,7 +13,8 @@ export type GrammarName =
   | 'cpp'
   | 'c_sharp'
   | 'java'
-  | 'kotlin';
+  | 'kotlin'
+  | 'ruby';
 
 const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   javascript: 'tree-sitter-javascript.wasm',
@@ -27,6 +28,7 @@ const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   c_sharp: 'tree-sitter-c_sharp.wasm',
   java: 'tree-sitter-java.wasm',
   kotlin: 'tree-sitter-kotlin.wasm',
+  ruby: 'tree-sitter-ruby.wasm',
 };
 
 const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
@@ -52,6 +54,7 @@ const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
   '.java': 'java',
   '.kt': 'kotlin',
   '.kts': 'kotlin',
+  '.rb': 'ruby',
 };
 
 export function grammarForFileExt(ext: string): GrammarName {

@@ -225,12 +225,12 @@ real file at all.
 ## Languages supported
 
 TypeScript, JavaScript (including JSX/TSX), Python, Go, Rust, C, C++, C#,
-Java, and Kotlin, with more planned. Import resolution follows relative
-paths and tsconfig/jsconfig `paths` aliases for TS/JS (nearest
+Java, Kotlin, and Ruby, with more planned. Import resolution follows
+relative paths and tsconfig/jsconfig `paths` aliases for TS/JS (nearest
 `tsconfig.json`/`jsconfig.json` walking up from each file), Rust's
 `crate::`/`self::`/`super::` paths for same-crate resolution, quoted
-`#include`s relative to the including file for C/C++, and Java/Kotlin's
-package-to-directory convention.
+`#include`s relative to the including file for C/C++, Java/Kotlin's
+package-to-directory convention, and Ruby's `require_relative`.
 
 ## Performance
 

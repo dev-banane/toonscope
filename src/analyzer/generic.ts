@@ -1193,6 +1193,128 @@ function analyzeKotlin(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- Ruby ----------
+
+function rubyParams(paramsNode: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(paramsNode)) {
+    switch (p.type) {
+      case 'identifier':
+        out.push({ name: p.text });
+        break;
+      case 'optional_parameter': {
+        const name = fieldText(p, 'name') ?? children(p)[0]?.text ?? '';
+        const value = fieldText(p, 'value');
+        out.push({ name, optional: true, default: value });
+        break;
+      }
+      case 'splat_parameter':
+        out.push({ name: `*${children(p)[0]?.text ?? ''}`, rest: true });
+        break;
+      case 'hash_splat_parameter':
+        out.push({ name: `**${children(p)[0]?.text ?? ''}`, rest: true });
+        break;
+      case 'keyword_parameter': {
+        const name = fieldText(p, 'name') ?? children(p)[0]?.text ?? '';
+        const value = fieldText(p, 'value');
+        out.push({ name, optional: value !== undefined, default: value });
+        break;
+      }
+      case 'block_parameter':
+        out.push({ name: `&${children(p)[0]?.text ?? ''}` });
+        break;
+      default:
+        if (p.text) out.push({ name: p.text });
+    }
+  }
+  return out;
+}
+
+function analyzeRuby(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, absPath, relPath, projectRoot } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  function processMethod(node: any, className?: string) {
+    const name = fieldText(node, 'name') ?? '';
+    if (!name) return;
+    signatures.push({
+      name: className ? `${className}.${name}` : name,
+      kind: className ? (name === 'initialize' ? 'constructor' : 'method') : 'function',
+      className,
+      params: rubyParams(node.childForFieldName?.('parameters')),
+      isAsync: false,
+      isGenerator: false,
+      isExported: true,
+      doc: leadingDoc(node),
+    });
+    if (!className) exports.push({ name, kind: 'function', isDefault: false });
+  }
+
+  function walk(nodes: any[]) {
+    for (const node of nodes) {
+      if (node.type === 'call') {
+        const method = fieldText(node, 'method');
+        if (method === 'require' || method === 'require_relative') {
+          const argList = node.childForFieldName?.('arguments');
+          const strNode = children(argList)[0];
+          const raw =
+            children(strNode).find((c: any) => c.type === 'string_content')
+              ?.text ?? '';
+          let resolvedPath: string | null = null;
+          if (method === 'require_relative' && raw) {
+            const candidate = path.join(path.dirname(absPath), `${raw}.rb`);
+            if (fs.existsSync(candidate))
+              resolvedPath = normalizeProjectRelativePath(
+                projectRoot,
+                candidate
+              );
+          }
+          imports.push({ source: raw, resolvedPath, names: [], isTypeOnly: false });
+        }
+        continue;
+      }
+      if (node.type === 'method') {
+        processMethod(node);
+        continue;
+      }
+      if (node.type === 'class' || node.type === 'module') {
+        const name = fieldText(node, 'name') ?? '';
+        if (!name) continue;
+        const body = node.childForFieldName?.('body');
+        types.push({
+          name,
+          kind: node.type === 'module' ? 'interface' : 'class',
+          definition: '{}',
+          isExported: true,
+          doc: leadingDoc(node),
+        });
+        exports.push({
+          name,
+          kind: node.type === 'module' ? 'interface' : 'class',
+          isDefault: false,
+        });
+        for (const member of children(body)) {
+          if (member.type === 'method') processMethod(member, name);
+        }
+        continue;
+      }
+    }
+  }
+
+  walk(children(rootNode));
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /(_spec|_test)\.rb$/,
+    testDirRegex: /\/(spec|test)\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -1214,6 +1336,8 @@ export function analyzeGeneric(
       return analyzeJava(ctx);
     case 'kotlin':
       return analyzeKotlin(ctx);
+    case 'ruby':
+      return analyzeRuby(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }
