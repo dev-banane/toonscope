@@ -29,6 +29,7 @@ export function isProbablySourceFile(
   if (ext === '.java') return languages.includes('java');
   if (ext === '.kt' || ext === '.kts') return languages.includes('kotlin');
   if (ext === '.rb') return languages.includes('ruby');
+  if (ext === '.swift') return languages.includes('swift');
   return false;
 }
 

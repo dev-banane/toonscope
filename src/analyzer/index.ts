@@ -35,6 +35,7 @@ const EXT_TO_LANGUAGE: Record<string, Language> = {
   '.kt': 'kotlin',
   '.kts': 'kotlin',
   '.rb': 'ruby',
+  '.swift': 'swift',
 };
 
 const GENERIC_LANGUAGES = new Set<Language>([
@@ -46,6 +47,7 @@ const GENERIC_LANGUAGES = new Set<Language>([
   'java',
   'kotlin',
   'ruby',
+  'swift',
 ]);
 
 function languageForExt(ext: string): Language {

@@ -1,0 +1,4 @@
+import XCTest
+
+func testAdd() {
+}

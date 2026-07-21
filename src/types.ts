@@ -9,7 +9,8 @@ export type Language =
   | 'csharp'
   | 'java'
   | 'kotlin'
-  | 'ruby';
+  | 'ruby'
+  | 'swift';
 
 export interface ToonConfig {
   include: string[];

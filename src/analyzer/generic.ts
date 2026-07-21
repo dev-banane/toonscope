@@ -1315,6 +1315,184 @@ function analyzeRuby(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- Swift ----------
+
+function swiftParamsFrom(paramNodes: any[]): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of paramNodes) {
+    if (p.type !== 'parameter') continue;
+    const named = children(p);
+    const name = named[0]?.text ?? '';
+    if (!name) continue;
+    const typeNode = named
+      .slice(1)
+      .find((c: any) => c.type === 'user_type' || c.type === 'type_annotation');
+    const info: ParamInfo = { name };
+    if (typeNode) info.type = typeNode.text.replace(/^:\s*/, '');
+    out.push(info);
+  }
+  return out;
+}
+
+function swiftFunctionSignature(returnTypeSkipName: any[]): any {
+  return returnTypeSkipName
+    .filter(
+      (c: any) => c.type !== 'parameter' && c.type !== 'simple_identifier' && !/modifier/i.test(c.type)
+    )
+    .pop();
+}
+
+function isSwiftPrivate(node: any): boolean {
+  return children(node).some(
+    (c: any) => c.type === 'modifiers' && /private|fileprivate/.test(c.text)
+  );
+}
+
+function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, relPath } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  for (const node of children(rootNode)) {
+    if (node.type === 'import_declaration') {
+      const idNode = children(node)[0];
+      const raw = idNode?.text ?? '';
+      imports.push({
+        source: raw,
+        resolvedPath: null,
+        names: raw ? [raw.split('.').pop()!] : [],
+        isTypeOnly: false,
+      });
+      continue;
+    }
+
+    if (node.type === 'function_declaration') {
+      const name = fieldText(node, 'name') ?? '';
+      if (!name) continue;
+      const named = children(node);
+      const bodyIdx = named.findIndex((c: any) => c.type === 'function_body');
+      const before = bodyIdx >= 0 ? named.slice(0, bodyIdx) : named;
+      const params = before.filter((c: any) => c.type === 'parameter');
+      const returnTypeNode = swiftFunctionSignature(before);
+      const isExported = !isSwiftPrivate(node);
+      signatures.push({
+        name,
+        kind: 'function',
+        params: swiftParamsFrom(params),
+        returnType: returnTypeNode?.text,
+        isAsync: /\basync\b/.test(node.text.split('{')[0] ?? ''),
+        isGenerator: false,
+        isExported,
+        doc: leadingDoc(node),
+      });
+      if (isExported) exports.push({ name, kind: 'function', isDefault: false });
+      continue;
+    }
+
+    if (node.type === 'class_declaration') {
+      const named = children(node);
+      const name =
+        named.find((c: any) => c.type === 'type_identifier')?.text ?? '';
+      if (!name) continue;
+      const keyword = node.child(0)?.type ?? 'class';
+      const kind: TypeInfo['kind'] = keyword === 'enum' ? 'enum' : 'class';
+      const isExported = !isSwiftPrivate(node);
+      const body = node.childForFieldName?.('body');
+
+      const props: string[] = [];
+      if (body) {
+        for (const member of children(body)) {
+          if (member.type === 'property_declaration') {
+            const patternNode = children(member).find(
+              (c: any) => c.type === 'pattern'
+            );
+            const pname = children(patternNode)[0]?.text ?? '';
+            const typeAnn = children(member).find(
+              (c: any) => c.type === 'type_annotation'
+            );
+            if (pname)
+              props.push(
+                typeAnn ? `${pname}: ${typeAnn.text.replace(/^:\s*/, '')}` : pname
+              );
+          } else if (
+            member.type === 'function_declaration' ||
+            member.type === 'init_declaration'
+          ) {
+            const mnamed = children(member);
+            const mname =
+              member.type === 'init_declaration'
+                ? 'init'
+                : fieldText(member, 'name') ?? '';
+            if (!mname) continue;
+            const mBodyIdx = mnamed.findIndex(
+              (c: any) => c.type === 'function_body'
+            );
+            const mBefore =
+              mBodyIdx >= 0 ? mnamed.slice(0, mBodyIdx) : mnamed;
+            const mParams = mBefore.filter((c: any) => c.type === 'parameter');
+            const mReturn = swiftFunctionSignature(mBefore);
+            signatures.push({
+              name: `${name}.${mname}`,
+              kind: member.type === 'init_declaration' ? 'constructor' : 'method',
+              className: name,
+              params: swiftParamsFrom(mParams),
+              returnType:
+                member.type === 'init_declaration' ? undefined : mReturn?.text,
+              isAsync: false,
+              isGenerator: false,
+              isExported: isExported && !isSwiftPrivate(member),
+              doc: leadingDoc(member),
+            });
+          } else if (member.type === 'enum_entry') {
+            props.push(children(member)[0]?.text ?? '');
+          }
+        }
+      }
+
+      types.push({
+        name,
+        kind,
+        definition:
+          kind === 'enum' ? props.join(' | ') || '{}' : `{ ${props.join(', ')} }`,
+        isExported,
+        doc: leadingDoc(node),
+      });
+      if (isExported)
+        exports.push({
+          name,
+          kind: kind === 'enum' ? 'enum' : 'class',
+          isDefault: false,
+        });
+      continue;
+    }
+
+    if (node.type === 'protocol_declaration') {
+      const name = fieldText(node, 'name') ?? '';
+      if (!name) continue;
+      const isExported = !isSwiftPrivate(node);
+      types.push({
+        name,
+        kind: 'interface',
+        definition: '{}',
+        isExported,
+        doc: leadingDoc(node),
+      });
+      if (isExported)
+        exports.push({ name, kind: 'interface', isDefault: false });
+      continue;
+    }
+  }
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /tests\.swift$/i,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -1338,6 +1516,8 @@ export function analyzeGeneric(
       return analyzeKotlin(ctx);
     case 'ruby':
       return analyzeRuby(ctx);
+    case 'swift':
+      return analyzeSwift(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }
