@@ -8,7 +8,8 @@ export type GrammarName =
   | 'tsx'
   | 'python'
   | 'go'
-  | 'rust';
+  | 'rust'
+  | 'c';
 
 const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   javascript: 'tree-sitter-javascript.wasm',
@@ -17,6 +18,7 @@ const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   python: 'tree-sitter-python.wasm',
   go: 'tree-sitter-go.wasm',
   rust: 'tree-sitter-rust.wasm',
+  c: 'tree-sitter-c.wasm',
 };
 
 const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
@@ -31,6 +33,8 @@ const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
   '.py': 'python',
   '.go': 'go',
   '.rs': 'rust',
+  '.c': 'c',
+  '.h': 'c',
 };
 
 export function grammarForFileExt(ext: string): GrammarName {

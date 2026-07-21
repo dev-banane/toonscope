@@ -22,6 +22,7 @@ export function isProbablySourceFile(
   if (ext === '.py') return languages.includes('python');
   if (ext === '.go') return languages.includes('go');
   if (ext === '.rs') return languages.includes('rust');
+  if (ext === '.c' || ext === '.h') return languages.includes('c');
   return false;
 }
 

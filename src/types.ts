@@ -3,7 +3,8 @@ export type Language =
   | 'javascript'
   | 'python'
   | 'go'
-  | 'rust';
+  | 'rust'
+  | 'c';
 
 export interface ToonConfig {
   include: string[];

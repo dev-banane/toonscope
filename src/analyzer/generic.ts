@@ -487,6 +487,184 @@ function analyzeRust(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- C ----------
+
+function pointerDepth(declarator: any): number {
+  let d = declarator;
+  let depth = 0;
+  while (d && d.type === 'pointer_declarator') {
+    depth++;
+    d = d.childForFieldName?.('declarator');
+  }
+  return depth;
+}
+
+function cParams(paramList: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(paramList)) {
+    if (p.type !== 'parameter_declaration') continue;
+    const type = fieldText(p, 'type');
+    const declarator = p.childForFieldName?.('declarator');
+    let nameNode = declarator;
+    if (declarator && declarator.type !== 'identifier') {
+      nameNode = findDescendant(declarator, 'identifier');
+    }
+    const name = nameNode?.text ?? '';
+    if (!name) continue;
+    const info: ParamInfo = { name };
+    if (type)
+      info.type = `${type.replace(/\s+/g, ' ').trim()}${'*'.repeat(pointerDepth(declarator))}`;
+    out.push(info);
+  }
+  return out;
+}
+
+function cFunctionInfo(
+  node: any
+): { name: string; params: ParamInfo[]; returnType?: string } | null {
+  const declarator = findDescendant(node, 'function_declarator');
+  if (!declarator) return null;
+  let nameNode = declarator.childForFieldName?.('declarator');
+  let name = nameNode?.text ?? '';
+  if (nameNode?.type === 'qualified_identifier') {
+    name = nameNode.childForFieldName?.('name')?.text ?? name;
+  }
+  const returnTypeNode = node.childForFieldName?.('type');
+  return {
+    name,
+    params: cParams(declarator.childForFieldName?.('parameters')),
+    returnType: returnTypeNode?.text?.trim(),
+  };
+}
+
+function isStaticNode(node: any): boolean {
+  return children(node).some(
+    (c: any) => c.type === 'storage_class_specifier' && c.text === 'static'
+  );
+}
+
+function analyzeCLike(ctx: Ctx, opts: { cpp: boolean }): GenericAnalysisResult {
+  const { rootNode, absPath, relPath, projectRoot } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  function resolveInclude(raw: string, quoted: boolean): string | null {
+    if (!quoted) return null;
+    const candidate = path.join(path.dirname(absPath), raw);
+    return fs.existsSync(candidate)
+      ? normalizeProjectRelativePath(projectRoot, candidate)
+      : null;
+  }
+
+  function walkTop(nodes: any[]) {
+    for (const node of nodes) {
+      if (node.type === 'preproc_include') {
+        const pathNode = node.childForFieldName?.('path');
+        const quoted = pathNode?.type === 'string_literal';
+        const raw = (pathNode?.text ?? '').replace(/^["<]|[">]$/g, '');
+        imports.push({
+          source: raw,
+          resolvedPath: resolveInclude(raw, quoted),
+          names: [],
+          isTypeOnly: false,
+        });
+        continue;
+      }
+
+      if (node.type === 'namespace_definition') {
+        walkTop(children(node.childForFieldName?.('body')));
+        continue;
+      }
+
+      if (
+        node.type === 'preproc_ifdef' ||
+        node.type === 'preproc_if' ||
+        node.type === 'linkage_specification'
+      ) {
+        walkTop(children(node));
+        continue;
+      }
+
+      if (node.type === 'function_definition') {
+        const info = cFunctionInfo(node);
+        if (!info || !info.name) continue;
+        const isExported = !isStaticNode(node);
+        signatures.push({
+          name: info.name,
+          kind: 'function',
+          params: info.params,
+          returnType: info.returnType,
+          isAsync: false,
+          isGenerator: false,
+          isExported,
+          doc: leadingDoc(node),
+        });
+        if (isExported)
+          exports.push({ name: info.name, kind: 'function', isDefault: false });
+        continue;
+      }
+
+      if (
+        node.type === 'struct_specifier' ||
+        node.type === 'enum_specifier' ||
+        node.type === 'union_specifier'
+      ) {
+        const name = fieldText(node, 'name');
+        if (!name) continue;
+        const body = node.childForFieldName?.('body');
+        let definition = '{}';
+        let kind: TypeInfo['kind'] = 'class';
+        if (node.type === 'enum_specifier') {
+          kind = 'enum';
+          const members: string[] = [];
+          for (const e of children(body))
+            if (e.type === 'enumerator') members.push(fieldText(e, 'name') ?? '');
+          definition = members.filter(Boolean).join(' | ') || '{}';
+        } else {
+          const fields: string[] = [];
+          for (const f of children(body)) {
+            if (f.type === 'field_declaration') {
+              const ftype = fieldText(f, 'type');
+              const decl = f.childForFieldName?.('declarator');
+              const fname =
+                decl?.type === 'identifier' || decl?.type === 'field_identifier'
+                  ? decl.text
+                  : findDescendant(decl, 'field_identifier')?.text;
+              if (fname) fields.push(ftype ? `${fname}: ${ftype}` : fname);
+            }
+          }
+          definition = `{ ${fields.join(', ')} }`;
+        }
+        types.push({
+          name,
+          kind,
+          definition,
+          isExported: true,
+          doc: leadingDoc(node),
+        });
+        exports.push({
+          name,
+          kind: kind === 'enum' ? 'enum' : 'class',
+          isDefault: false,
+        });
+        continue;
+      }
+    }
+  }
+
+  walkTop(children(rootNode));
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /(^|\/)test_.*\.(c|cc|cpp|cxx)$|_test\.(c|cc|cpp|cxx)$/,
+    testDirRegex: /\/tests?\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -498,6 +676,8 @@ export function analyzeGeneric(
       return analyzeGo(ctx);
     case 'rust':
       return analyzeRust(ctx);
+    case 'c':
+      return analyzeCLike(ctx, { cpp: false });
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

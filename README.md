@@ -224,11 +224,12 @@ real file at all.
 
 ## Languages supported
 
-TypeScript, JavaScript (including JSX/TSX), Python, Go, and Rust, with
+TypeScript, JavaScript (including JSX/TSX), Python, Go, Rust, and C, with
 more planned. Import resolution follows relative paths and
 tsconfig/jsconfig `paths` aliases for TS/JS (nearest
-`tsconfig.json`/`jsconfig.json` walking up from each file), and Rust's
-`crate::`/`self::`/`super::` paths for same-crate resolution.
+`tsconfig.json`/`jsconfig.json` walking up from each file), Rust's
+`crate::`/`self::`/`super::` paths for same-crate resolution, and C's
+quoted `#include`s relative to the including file.
 
 ## Performance
 
