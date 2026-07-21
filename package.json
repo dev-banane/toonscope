@@ -1,6 +1,6 @@
 {
   "name": "toonscope",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Token-efficient codebase context maps for AI coding agents.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
