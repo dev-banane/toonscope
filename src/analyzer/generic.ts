@@ -859,6 +859,159 @@ function analyzeCSharp(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- Java ----------
+
+function javaParams(paramList: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(paramList)) {
+    if (p.type !== 'formal_parameter' && p.type !== 'spread_parameter') continue;
+    const name = fieldText(p, 'name') ?? '';
+    if (!name) continue;
+    const type = fieldText(p, 'type');
+    const info: ParamInfo = { name };
+    if (type) info.type = type;
+    if (p.type === 'spread_parameter') info.rest = true;
+    out.push(info);
+  }
+  return out;
+}
+
+function hasJavaModifier(node: any, mod: string): boolean {
+  const modifiers = children(node).find((c: any) => c.type === 'modifiers');
+  if (!modifiers) return false;
+  return new RegExp(`(^|\\s)${mod}(\\s|$)`).test(modifiers.text);
+}
+
+function analyzeJava(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, relPath, projectRoot } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  function resolveJavaImport(dotted: string): string | null {
+    const parts = dotted.split('.');
+    const withExt = path.join(projectRoot, ...parts) + '.java';
+    return fs.existsSync(withExt)
+      ? normalizeProjectRelativePath(projectRoot, withExt)
+      : null;
+  }
+
+  function walkClassBody(
+    body: any,
+    className: string,
+    isTopExported: boolean,
+    implicitPublic: boolean
+  ) {
+    for (const member of children(body)) {
+      if (member.type === 'method_declaration') {
+        const name = fieldText(member, 'name') ?? '';
+        if (!name) continue;
+        const isPublic = hasJavaModifier(member, 'public') || implicitPublic;
+        signatures.push({
+          name: `${className}.${name}`,
+          kind: 'method',
+          className,
+          params: javaParams(member.childForFieldName?.('parameters')),
+          returnType: fieldText(member, 'type'),
+          isAsync: false,
+          isGenerator: false,
+          isExported: isTopExported && isPublic,
+          doc: leadingDoc(member),
+        });
+      } else if (member.type === 'constructor_declaration') {
+        const isPublic = hasJavaModifier(member, 'public');
+        signatures.push({
+          name: `${className}.${className}`,
+          kind: 'constructor',
+          className,
+          params: javaParams(member.childForFieldName?.('parameters')),
+          isAsync: false,
+          isGenerator: false,
+          isExported: isTopExported && isPublic,
+          doc: leadingDoc(member),
+        });
+      }
+    }
+  }
+
+  function walkTypeDecl(node: any) {
+    const name = fieldText(node, 'name') ?? '';
+    if (!name) return;
+    const isExported = hasJavaModifier(node, 'public');
+    const body = node.childForFieldName?.('body');
+    let kind: TypeInfo['kind'] = 'class';
+    let definition = '{}';
+    if (node.type === 'interface_declaration') kind = 'interface';
+    else if (node.type === 'enum_declaration') kind = 'enum';
+
+    if (node.type === 'enum_declaration' && body) {
+      const constants: string[] = [];
+      for (const c of children(body))
+        if (c.type === 'enum_constant') constants.push(fieldText(c, 'name') ?? '');
+      definition = constants.filter(Boolean).join(' | ') || '{}';
+    } else if (body) {
+      const members: string[] = [];
+      for (const m of children(body)) {
+        if (m.type === 'field_declaration') {
+          const type = fieldText(m, 'type');
+          const declarator = children(m).find(
+            (c: any) => c.type === 'variable_declarator'
+          );
+          const fname = declarator?.childForFieldName?.('name')?.text;
+          if (fname) members.push(type ? `${fname}: ${type}` : fname);
+        }
+      }
+      definition = `{ ${members.join(', ')} }`;
+    }
+
+    types.push({ name, kind, definition, isExported, doc: leadingDoc(node) });
+    if (isExported)
+      exports.push({
+        name,
+        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        isDefault: false,
+      });
+
+    if (body)
+      walkClassBody(body, name, isExported, node.type === 'interface_declaration');
+  }
+
+  for (const node of children(rootNode)) {
+    if (node.type === 'import_declaration') {
+      const scoped = children(node)[0];
+      const dotted = scoped?.text ?? '';
+      const nameSeg = dotted.split('.').pop() ?? dotted;
+      imports.push({
+        source: dotted,
+        resolvedPath: resolveJavaImport(dotted),
+        names: nameSeg ? [nameSeg] : [],
+        isTypeOnly: false,
+      });
+      continue;
+    }
+    if (
+      [
+        'class_declaration',
+        'interface_declaration',
+        'enum_declaration',
+        'record_declaration',
+      ].includes(node.type)
+    ) {
+      walkTypeDecl(node);
+      continue;
+    }
+  }
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /tests?\.java$/i,
+    testDirRegex: /\/test\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -876,6 +1029,8 @@ export function analyzeGeneric(
       return analyzeCLike(ctx, { cpp: true });
     case 'csharp':
       return analyzeCSharp(ctx);
+    case 'java':
+      return analyzeJava(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

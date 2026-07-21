@@ -31,6 +31,7 @@ const EXT_TO_LANGUAGE: Record<string, Language> = {
   '.hpp': 'cpp',
   '.hxx': 'cpp',
   '.cs': 'csharp',
+  '.java': 'java',
 };
 
 const GENERIC_LANGUAGES = new Set<Language>([
@@ -39,6 +40,7 @@ const GENERIC_LANGUAGES = new Set<Language>([
   'c',
   'cpp',
   'csharp',
+  'java',
 ]);
 
 function languageForExt(ext: string): Language {

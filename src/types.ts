@@ -6,7 +6,8 @@ export type Language =
   | 'rust'
   | 'c'
   | 'cpp'
-  | 'csharp';
+  | 'csharp'
+  | 'java';
 
 export interface ToonConfig {
   include: string[];
