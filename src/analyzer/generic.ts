@@ -1493,6 +1493,151 @@ function analyzeSwift(ctx: Ctx): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- PHP ----------
+
+function phpParams(node: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(node)) {
+    if (p.type !== 'simple_parameter' && p.type !== 'variadic_parameter')
+      continue;
+    const nameNode = p.childForFieldName?.('name');
+    const name = (nameNode?.text ?? '').replace(/^\$/, '');
+    if (!name) continue;
+    const typeNode = p.childForFieldName?.('type');
+    const defaultNode = p.childForFieldName?.('default_value');
+    const info: ParamInfo = { name };
+    if (typeNode) info.type = typeNode.text;
+    if (defaultNode) {
+      info.optional = true;
+      info.default = defaultNode.text;
+    }
+    if (p.type === 'variadic_parameter') info.rest = true;
+    out.push(info);
+  }
+  return out;
+}
+
+function isPhpPrivateMember(node: any): boolean {
+  return children(node).some(
+    (c: any) =>
+      c.type === 'visibility_modifier' &&
+      (c.text === 'private' || c.text === 'protected')
+  );
+}
+
+function analyzePhp(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, relPath } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  for (const node of children(rootNode)) {
+    if (node.type === 'namespace_use_declaration') {
+      for (const clause of children(node)) {
+        if (clause.type !== 'namespace_use_clause') continue;
+        const qualified = children(clause).find(
+          (c: any) => c.type === 'qualified_name' || c.type === 'name'
+        );
+        const raw = qualified?.text ?? '';
+        const aliasClause = children(clause).find(
+          (c: any) => c.type === 'namespace_aliasing_clause'
+        );
+        const alias = children(aliasClause)[0]?.text;
+        const nameSeg = alias ?? raw.split('\\').pop() ?? raw;
+        imports.push({
+          source: raw,
+          resolvedPath: null,
+          names: nameSeg ? [nameSeg] : [],
+          isTypeOnly: false,
+        });
+      }
+      continue;
+    }
+
+    if (node.type === 'function_definition') {
+      const name = fieldText(node, 'name') ?? '';
+      if (!name) continue;
+      signatures.push({
+        name,
+        kind: 'function',
+        params: phpParams(node.childForFieldName?.('parameters')),
+        isAsync: false,
+        isGenerator: false,
+        isExported: true,
+        doc: leadingDoc(node),
+      });
+      exports.push({ name, kind: 'function', isDefault: false });
+      continue;
+    }
+
+    if (
+      [
+        'class_declaration',
+        'interface_declaration',
+        'trait_declaration',
+        'enum_declaration',
+      ].includes(node.type)
+    ) {
+      const name = fieldText(node, 'name') ?? '';
+      if (!name) continue;
+      const body = node.childForFieldName?.('body');
+      const kind: TypeInfo['kind'] =
+        node.type === 'interface_declaration'
+          ? 'interface'
+          : node.type === 'enum_declaration'
+            ? 'enum'
+            : 'class';
+      const props: string[] = [];
+      for (const member of children(body)) {
+        if (member.type === 'method_declaration') {
+          const mname = fieldText(member, 'name') ?? '';
+          if (!mname) continue;
+          const isPriv = isPhpPrivateMember(member);
+          signatures.push({
+            name: `${name}.${mname}`,
+            kind: mname === '__construct' ? 'constructor' : 'method',
+            className: name,
+            params: phpParams(member.childForFieldName?.('parameters')),
+            isAsync: false,
+            isGenerator: false,
+            isExported: !isPriv,
+            doc: leadingDoc(member),
+          });
+        } else if (member.type === 'property_declaration') {
+          for (const el of children(member)) {
+            if (el.type !== 'property_element') continue;
+            const varNode = children(el)[0];
+            const pname = (varNode?.text ?? '').replace(/^\$/, '');
+            if (pname) props.push(pname);
+          }
+        }
+      }
+      types.push({
+        name,
+        kind,
+        definition: `{ ${props.join(', ')} }`,
+        isExported: true,
+        doc: leadingDoc(node),
+      });
+      exports.push({
+        name,
+        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        isDefault: false,
+      });
+      continue;
+    }
+  }
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /test\.php$/i,
+    testDirRegex: /\/tests?\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -1518,6 +1663,8 @@ export function analyzeGeneric(
       return analyzeRuby(ctx);
     case 'swift':
       return analyzeSwift(ctx);
+    case 'php':
+      return analyzePhp(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

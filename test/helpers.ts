@@ -34,6 +34,7 @@ export function defaultTestConfig(projectRoot: string): ToonConfig {
       'kotlin',
       'ruby',
       'swift',
+      'php',
     ],
     splitThreshold: 15,
   };

@@ -10,7 +10,8 @@ export type Language =
   | 'java'
   | 'kotlin'
   | 'ruby'
-  | 'swift';
+  | 'swift'
+  | 'php';
 
 export interface ToonConfig {
   include: string[];
