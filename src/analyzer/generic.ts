@@ -651,6 +651,67 @@ function analyzeCLike(ctx: Ctx, opts: { cpp: boolean }): GenericAnalysisResult {
         });
         continue;
       }
+
+      if (opts.cpp && node.type === 'class_specifier') {
+        const name = fieldText(node, 'name');
+        if (!name) continue;
+        const body = node.childForFieldName?.('body');
+        const fields: string[] = [];
+        for (const member of children(body)) {
+          if (member.type === 'field_declaration' || member.type === 'declaration') {
+            const declarator = member.childForFieldName?.('declarator');
+            const fnDeclarator =
+              declarator?.type === 'function_declarator' ? declarator : null;
+            if (fnDeclarator) {
+              const nameNode = fnDeclarator.childForFieldName?.('declarator');
+              const methodName = nameNode?.text ?? '';
+              if (!methodName) continue;
+              signatures.push({
+                name: `${name}.${methodName}`,
+                kind: methodName === name ? 'constructor' : 'method',
+                className: name,
+                params: cParams(fnDeclarator.childForFieldName?.('parameters')),
+                returnType: fieldText(member, 'type'),
+                isAsync: false,
+                isGenerator: false,
+                isExported: true,
+                doc: leadingDoc(member),
+              });
+            } else {
+              const ftype = fieldText(member, 'type');
+              const fname =
+                declarator?.type === 'field_identifier'
+                  ? declarator.text
+                  : findDescendant(declarator, 'field_identifier')?.text;
+              if (fname) fields.push(ftype ? `${fname}: ${ftype}` : fname);
+            }
+          } else if (member.type === 'function_definition') {
+            const info = cFunctionInfo(member);
+            if (info?.name) {
+              signatures.push({
+                name: `${name}.${info.name}`,
+                kind: info.name === name ? 'constructor' : 'method',
+                className: name,
+                params: info.params,
+                returnType: info.returnType,
+                isAsync: false,
+                isGenerator: false,
+                isExported: true,
+                doc: leadingDoc(member),
+              });
+            }
+          }
+        }
+        types.push({
+          name,
+          kind: 'class',
+          definition: `{ ${fields.join(', ')} }`,
+          isExported: true,
+          doc: leadingDoc(node),
+        });
+        exports.push({ name, kind: 'class', isDefault: false });
+        continue;
+      }
     }
   }
 
@@ -678,6 +739,8 @@ export function analyzeGeneric(
       return analyzeRust(ctx);
     case 'c':
       return analyzeCLike(ctx, { cpp: false });
+    case 'cpp':
+      return analyzeCLike(ctx, { cpp: true });
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

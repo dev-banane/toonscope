@@ -23,6 +23,8 @@ export function isProbablySourceFile(
   if (ext === '.go') return languages.includes('go');
   if (ext === '.rs') return languages.includes('rust');
   if (ext === '.c' || ext === '.h') return languages.includes('c');
+  if (['.cpp', '.cc', '.cxx', '.hpp', '.hxx'].includes(ext))
+    return languages.includes('cpp');
   return false;
 }
 

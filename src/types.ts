@@ -4,7 +4,8 @@ export type Language =
   | 'python'
   | 'go'
   | 'rust'
-  | 'c';
+  | 'c'
+  | 'cpp';
 
 export interface ToonConfig {
   include: string[];

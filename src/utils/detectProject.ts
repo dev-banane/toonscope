@@ -40,6 +40,11 @@ const EXT_LANGUAGE: Record<string, Language> = {
   '.rs': 'rust',
   '.c': 'c',
   '.h': 'c',
+  '.cpp': 'cpp',
+  '.cc': 'cpp',
+  '.cxx': 'cpp',
+  '.hpp': 'cpp',
+  '.hxx': 'cpp',
 };
 
 export async function detectLanguages(

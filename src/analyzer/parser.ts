@@ -9,7 +9,8 @@ export type GrammarName =
   | 'python'
   | 'go'
   | 'rust'
-  | 'c';
+  | 'c'
+  | 'cpp';
 
 const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   javascript: 'tree-sitter-javascript.wasm',
@@ -19,6 +20,7 @@ const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   go: 'tree-sitter-go.wasm',
   rust: 'tree-sitter-rust.wasm',
   c: 'tree-sitter-c.wasm',
+  cpp: 'tree-sitter-cpp.wasm',
 };
 
 const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
@@ -35,6 +37,11 @@ const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
   '.rs': 'rust',
   '.c': 'c',
   '.h': 'c',
+  '.cpp': 'cpp',
+  '.cc': 'cpp',
+  '.cxx': 'cpp',
+  '.hpp': 'cpp',
+  '.hxx': 'cpp',
 };
 
 export function grammarForFileExt(ext: string): GrammarName {
