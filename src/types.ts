@@ -16,6 +16,7 @@ export interface ToonConfig {
   languages: Language[];
   splitThreshold?: number;
   gitignoreToon?: boolean;
+  precommitHook?: boolean;
   integrations?: {
     agents?: boolean;
     claude_code?: boolean;
@@ -23,6 +24,7 @@ export interface ToonConfig {
     copilot?: boolean;
     gemini?: boolean;
     windsurf?: boolean;
+    agentAutoUpdate?: boolean;
   };
 }
 

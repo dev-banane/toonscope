@@ -39,6 +39,11 @@ import {
   detectTools,
   removeIntegrationBlocks,
 } from './integrations';
+import {
+  hasPrecommitHook,
+  installPrecommitHook,
+  removePrecommitHook,
+} from './git/hooks';
 import { writeToVault } from './vault/index';
 import type { ToonConfig, ToonContext } from './types';
 import {
@@ -654,10 +659,15 @@ program
         true
       );
       let includeNonDetected = false;
+      let agentAutoUpdate = false;
       if (shouldGenerateIntegrations) {
         includeNonDetected = await promptYesNo(
           '  Include non-detected AI integrations too? (y/N) ',
           false
+        );
+        agentAutoUpdate = await promptYesNo(
+          '  Tell AI agents to run `toonscope generate` after finishing a change, so .toon/ stays in sync (plain generate, never calls an LLM)? (Y/n) ',
+          true
         );
       }
       cfg = {
@@ -672,6 +682,7 @@ program
             ? true
             : detected.gemini || Boolean(opts.gemini),
           windsurf: includeNonDetected ? true : detected.windsurf,
+          agentAutoUpdate,
         },
       };
       saveConfig(projectRoot, cfg, opts.config);
@@ -738,7 +749,31 @@ program
         );
       }
 
-      // Step 5: run initial generation
+      // Step 5: git pre-commit hook
+      const hasGit = fs.existsSync(path.join(projectRoot, '.git'));
+      if (hasGit) {
+        const wantHook = await promptYesNo(
+          '  Install a git pre-commit hook to auto-check/regenerate .toon/ before each commit? (Y/n) ',
+          true
+        );
+        if (wantHook) {
+          const hookResult = installPrecommitHook(projectRoot);
+          cfg = { ...cfg, precommitHook: hookResult.action !== 'skipped' };
+          saveConfig(projectRoot, cfg, opts.config);
+          if (!ro.quiet && !ro.json) {
+            if (hookResult.action === 'skipped') {
+              console.log(`  ⊘ Skipped hook install (${hookResult.note})\n`);
+            } else {
+              const rel = path.relative(projectRoot, hookResult.path);
+              console.log(
+                `  ✔ ${hookResult.action === 'created' ? 'Created' : 'Updated'} ${rel}\n`
+              );
+            }
+          }
+        }
+      }
+
+      // Step 6: run initial generation
       const shouldRunGenerate = await promptYesNo(
         '  Run initial generation now? (Y/n) ',
         true
@@ -769,6 +804,7 @@ program
               projectRoot,
               integrations: cfg.integrations,
               ai: cfg.ai,
+              precommitHook: Boolean(cfg.precommitHook),
               ranGenerate: shouldRunGenerate,
             },
             null,
@@ -1208,6 +1244,72 @@ keyCommand
     } else {
       console.log(`No stored key for ${id}.`);
     }
+  });
+
+const hookCommand = program
+  .command('hook')
+  .description('Manage the git pre-commit hook that keeps .toon/ in sync');
+
+hookCommand
+  .command('install')
+  .description(
+    'Install a pre-commit hook that runs `toonscope check` and regenerates .toon/ when stale (never blocks the commit)'
+  )
+  .option('--config <path>', 'Path to .toonscope.yaml')
+  .option('--json', 'Print machine-readable summary')
+  .action((opts) => {
+    const projectRoot = resolveProjectRoot(process.cwd());
+    const result = installPrecommitHook(projectRoot);
+    if (result.action !== 'skipped') {
+      const cfg = loadConfig(projectRoot, opts.config);
+      saveConfig(projectRoot, { ...cfg, precommitHook: true }, opts.config);
+    }
+    if (opts.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    if (result.action === 'skipped') {
+      console.log(`Skipped: ${result.note}`);
+      process.exitCode = 1;
+      return;
+    }
+    const rel = path.relative(projectRoot, result.path);
+    console.log(
+      `${result.action === 'unchanged' ? 'Already installed' : result.action === 'created' ? 'Created' : 'Updated'}: ${rel}`
+    );
+  });
+
+hookCommand
+  .command('remove')
+  .description('Remove the ToonScope pre-commit hook block')
+  .option('--config <path>', 'Path to .toonscope.yaml')
+  .option('--json', 'Print machine-readable summary')
+  .action((opts) => {
+    const projectRoot = resolveProjectRoot(process.cwd());
+    const result = removePrecommitHook(projectRoot);
+    const cfg = loadConfig(projectRoot, opts.config);
+    saveConfig(projectRoot, { ...cfg, precommitHook: false }, opts.config);
+    if (opts.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    console.log(
+      `${result.action === 'unchanged' ? 'No change' : 'Updated'}: ${result.path || '(no hook file found)'}${result.note ? ` (${result.note})` : ''}`
+    );
+  });
+
+hookCommand
+  .command('status')
+  .description('Show whether the ToonScope pre-commit hook is installed')
+  .option('--json', 'Print machine-readable summary')
+  .action((opts) => {
+    const projectRoot = resolveProjectRoot(process.cwd());
+    const installed = hasPrecommitHook(projectRoot);
+    if (opts.json) {
+      console.log(JSON.stringify({ installed }, null, 2));
+      return;
+    }
+    console.log(installed ? 'Installed' : 'Not installed');
   });
 
 program.parse(process.argv);

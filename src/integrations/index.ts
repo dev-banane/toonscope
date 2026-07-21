@@ -99,12 +99,15 @@ function upsertMarkedSection(
   return { path: filePath, action: 'updated', note: 'appended section' };
 }
 
-function contextBody(stats?: IntegrationStats): string[] {
+function contextBody(
+  stats?: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string[] {
   const reductionNote =
     stats && stats.fileCount > 0 && stats.reductionPct > 0
       ? ` (currently ~${stats.reductionPct.toFixed(0)}% smaller than raw source, across ${stats.fileCount} files)`
       : '';
-  return [
+  const body = [
     `ToonScope maintains a token-efficient map of this codebase in \`.toon/\`${reductionNote} — read a file's YAML summary instead of its full source when the overview is enough.`,
     '',
     '- `.toon/index.yaml` — every file: type, one-line summary, exports, connection counts (large dirs may split into `.toon/index/*.yaml` sub-indexes)',
@@ -122,33 +125,63 @@ function contextBody(stats?: IntegrationStats): string[] {
     '- `scope <file> --depth 2` — print a merged view of one file plus its dependency neighbors',
     '- `stats` — raw vs. compressed token counts',
   ];
+  if (agentAutoUpdate) {
+    body.push(
+      '',
+      '**After you finish making changes, run `npx toonscope generate`** (plain — no `--summarize`) before wrapping up, so `.toon/` reflects what you just wrote. This runs entirely locally and never calls an LLM.'
+    );
+  }
+  return body;
 }
 
-function sectionAgents(stats: IntegrationStats): string {
-  return ['## Codebase Context (ToonScope)', '', ...contextBody(stats)].join(
-    '\n'
-  );
+function sectionAgents(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
+  return [
+    '## Codebase Context (ToonScope)',
+    '',
+    ...contextBody(stats, agentAutoUpdate),
+  ].join('\n');
 }
 
-function sectionClaude(stats: IntegrationStats): string {
-  return ['## Codebase Context (ToonScope)', '', ...contextBody(stats)].join(
-    '\n'
-  );
+function sectionClaude(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
+  return [
+    '## Codebase Context (ToonScope)',
+    '',
+    ...contextBody(stats, agentAutoUpdate),
+  ].join('\n');
 }
 
-function sectionCopilot(stats: IntegrationStats): string {
-  return ['## Codebase Context (ToonScope)', '', ...contextBody(stats)].join(
-    '\n'
-  );
+function sectionCopilot(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
+  return [
+    '## Codebase Context (ToonScope)',
+    '',
+    ...contextBody(stats, agentAutoUpdate),
+  ].join('\n');
 }
 
-function sectionGemini(stats: IntegrationStats): string {
-  return ['## Codebase Context (ToonScope)', '', ...contextBody(stats)].join(
-    '\n'
-  );
+function sectionGemini(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
+  return [
+    '## Codebase Context (ToonScope)',
+    '',
+    ...contextBody(stats, agentAutoUpdate),
+  ].join('\n');
 }
 
-function cursorRule(stats: IntegrationStats): string {
+function cursorRule(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
   return (
     [
       '---',
@@ -157,15 +190,23 @@ function cursorRule(stats: IntegrationStats): string {
       'alwaysApply: true',
       '---',
       '',
-      ...contextBody(stats),
+      ...contextBody(stats, agentAutoUpdate),
     ].join('\n') + '\n'
   );
 }
 
-function windsurfRule(stats: IntegrationStats): string {
+function windsurfRule(
+  stats: IntegrationStats,
+  agentAutoUpdate?: boolean
+): string {
   return (
-    ['---', 'trigger: always_on', '---', '', ...contextBody(stats)].join('\n') +
-    '\n'
+    [
+      '---',
+      'trigger: always_on',
+      '---',
+      '',
+      ...contextBody(stats, agentAutoUpdate),
+    ].join('\n') + '\n'
   );
 }
 
@@ -176,6 +217,7 @@ export function applyIntegrationFiles(params: {
   forceGemini?: boolean;
 }): IntegrationUpdateResult[] {
   const { projectRoot, config, stats, forceGemini } = params;
+  const agentAutoUpdate = config.integrations?.agentAutoUpdate ?? false;
   const enabled = {
     agents: config.integrations?.agents ?? true,
     claude: config.integrations?.claude_code ?? false,
@@ -190,34 +232,34 @@ export function applyIntegrationFiles(params: {
     out.push(
       upsertMarkedSection(
         path.join(projectRoot, 'AGENTS.md'),
-        sectionAgents(stats)
+        sectionAgents(stats, agentAutoUpdate)
       )
     );
   if (enabled.claude)
     out.push(
       upsertMarkedSection(
         path.join(projectRoot, 'CLAUDE.md'),
-        sectionClaude(stats)
+        sectionClaude(stats, agentAutoUpdate)
       )
     );
   if (enabled.copilot)
     out.push(
       upsertMarkedSection(
         path.join(projectRoot, '.github', 'copilot-instructions.md'),
-        sectionCopilot(stats)
+        sectionCopilot(stats, agentAutoUpdate)
       )
     );
   if (enabled.gemini)
     out.push(
       upsertMarkedSection(
         path.join(projectRoot, 'GEMINI.md'),
-        sectionGemini(stats)
+        sectionGemini(stats, agentAutoUpdate)
       )
     );
   if (enabled.cursor) {
     const p = path.join(projectRoot, '.cursor', 'rules', 'toonscope.mdc');
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    const next = cursorRule(stats);
+    const next = cursorRule(stats, agentAutoUpdate);
     const existing = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
     fs.writeFileSync(p, next, 'utf8');
     out.push({
@@ -240,7 +282,7 @@ export function applyIntegrationFiles(params: {
   if (enabled.windsurf) {
     const p = path.join(projectRoot, '.windsurf', 'rules', 'toonscope.md');
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    const next = windsurfRule(stats);
+    const next = windsurfRule(stats, agentAutoUpdate);
     const existing = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
     fs.writeFileSync(p, next, 'utf8');
     out.push({

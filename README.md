@@ -81,6 +81,24 @@ which files are new, changed, or removed. Agents set up by `init` are
 instructed to run this before trusting the map, so a stale index gets
 caught rather than silently fed into a prompt.
 
+## Staying in sync
+
+Two opt-in ways to avoid having to remember `toonscope generate` yourself,
+both offered by `init` (and available any time after):
+
+- **Pre-commit hook** — `toonscope hook install` adds a git `pre-commit`
+  hook that runs `check`, and on a stale result runs `generate` and
+  `git add .toon` before the commit lands. It never blocks a commit (a
+  missing `npx`/network hiccup just no-ops) and composes with an existing
+  hook file — including Husky — instead of overwriting it. Remove it with
+  `toonscope hook remove`.
+- **Agent instruction** — answering yes to "Tell AI agents to run
+  `toonscope generate` after finishing a change?" during `init` (or setting
+  `integrations.agentAutoUpdate: true` in `.toonscope.yaml`) adds one line
+  to the generated AGENTS.md/CLAUDE.md/etc. telling the agent to run plain
+  `toonscope generate` — never `--summarize` — once it's done editing, so
+  it costs no LLM tokens either way.
+
 ## AI summaries (optional)
 
 By default every file gets a deterministic, templated one-line summary
@@ -120,6 +138,7 @@ that file's template summary.
 | `toonscope stats`                              | Print raw vs. compressed token counts and the reduction percentage.                                                                                                                                                                                    |
 | `toonscope watch`                              | Rebuild `.toon/` incrementally as files change.                                                                                                                                                                                                        |
 | `toonscope clean`                              | Remove `.toon/` (keeps `.toonscope.yaml`). `--integrations` also strips the managed blocks from AGENTS.md/etc. and deletes the generated cursor/windsurf rule files.                                                                                   |
+| `toonscope hook install / remove / status`     | Manage a git `pre-commit` hook that runs `check` and, if stale, `generate` + `git add .toon` before each commit — never blocks the commit, just keeps the map from drifting. Composes with existing hooks (Husky-aware) instead of overwriting them.   |
 | `toonscope key set / list / remove <provider>` | Manage stored AI provider API keys.                                                                                                                                                                                                                    |
 
 Every command accepts `--quiet` (essentials only), `--json` (machine
@@ -147,6 +166,8 @@ integrations:
   copilot: false # .github/copilot-instructions.md
   gemini: false # GEMINI.md
   windsurf: false # .windsurf/rules/toonscope.md
+  agentAutoUpdate: false # add a line telling agents to run `generate` after finishing a change
+precommitHook: false # whether `init`/`hook install` installed the pre-commit hook
 ```
 
 `init` fills in `include`/`languages` from what it actually finds on disk
