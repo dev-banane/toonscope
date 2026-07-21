@@ -5,7 +5,8 @@ export type Language =
   | 'go'
   | 'rust'
   | 'c'
-  | 'cpp';
+  | 'cpp'
+  | 'csharp';
 
 export interface ToonConfig {
   include: string[];

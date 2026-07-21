@@ -726,6 +726,139 @@ function analyzeCLike(ctx: Ctx, opts: { cpp: boolean }): GenericAnalysisResult {
   return { exports, imports, signatures, types, summary, fileType };
 }
 
+// ---------- C# ----------
+
+function csParams(node: any): ParamInfo[] {
+  const out: ParamInfo[] = [];
+  for (const p of children(node)) {
+    if (p.type !== 'parameter') continue;
+    const name = fieldText(p, 'name') ?? '';
+    if (!name) continue;
+    const type = fieldText(p, 'type');
+    const info: ParamInfo = { name };
+    if (type) info.type = type;
+    out.push(info);
+  }
+  return out;
+}
+
+function hasModifierCs(node: any, mod: string): boolean {
+  return children(node).some((c: any) => c.type === 'modifier' && c.text === mod);
+}
+
+function analyzeCSharp(ctx: Ctx): GenericAnalysisResult {
+  const { rootNode, relPath } = ctx;
+  const imports: ImportInfo[] = [];
+  const signatures: SignatureInfo[] = [];
+  const types: TypeInfo[] = [];
+  const exports: ExportInfo[] = [];
+
+  function walkBody(body: any, className: string, isTypeExported: boolean) {
+    for (const member of children(body)) {
+      if (member.type === 'method_declaration') {
+        const name = fieldText(member, 'name') ?? '';
+        if (!name) continue;
+        const isPublic =
+          hasModifierCs(member, 'public') ||
+          (isTypeExported && !hasModifierCs(member, 'private'));
+        signatures.push({
+          name: `${className}.${name}`,
+          kind: 'method',
+          className,
+          params: csParams(member.childForFieldName?.('parameters')),
+          returnType: fieldText(member, 'type'),
+          isAsync: hasModifierCs(member, 'async'),
+          isGenerator: false,
+          isExported: isPublic,
+          doc: leadingDoc(member),
+        });
+      } else if (member.type === 'constructor_declaration') {
+        const name = fieldText(member, 'name') ?? className;
+        signatures.push({
+          name: `${className}.${name}`,
+          kind: 'constructor',
+          className,
+          params: csParams(member.childForFieldName?.('parameters')),
+          isAsync: false,
+          isGenerator: false,
+          isExported: hasModifierCs(member, 'public'),
+          doc: leadingDoc(member),
+        });
+      }
+    }
+  }
+
+  function walkTypeDecl(node: any) {
+    const name = fieldText(node, 'name') ?? '';
+    if (!name) return;
+    const isExported = hasModifierCs(node, 'public');
+    const body = node.childForFieldName?.('body');
+    let kind: TypeInfo['kind'] = 'class';
+    let definition = '{}';
+    if (node.type === 'interface_declaration') kind = 'interface';
+    else if (node.type === 'enum_declaration') kind = 'enum';
+
+    if (node.type === 'enum_declaration' && body) {
+      const members: string[] = [];
+      for (const m of children(body))
+        if (m.type === 'enum_member_declaration')
+          members.push(fieldText(m, 'name') ?? '');
+      definition = members.filter(Boolean).join(' | ') || '{}';
+    }
+
+    types.push({ name, kind, definition, isExported, doc: leadingDoc(node) });
+    if (isExported)
+      exports.push({
+        name,
+        kind: kind === 'interface' ? 'interface' : kind === 'enum' ? 'enum' : 'class',
+        isDefault: false,
+      });
+    if (body) walkBody(body, name, isExported);
+  }
+
+  function walk(nodes: any[]) {
+    for (const node of nodes) {
+      if (node.type === 'using_directive') {
+        const nameNode = children(node)[0];
+        const raw = nameNode?.text ?? '';
+        imports.push({
+          source: raw,
+          resolvedPath: null,
+          names: raw ? [raw.split('.').pop()!] : [],
+          isTypeOnly: false,
+        });
+        continue;
+      }
+      if (node.type === 'namespace_declaration') {
+        walk(children(node.childForFieldName?.('body')));
+        continue;
+      }
+      if (
+        [
+          'class_declaration',
+          'interface_declaration',
+          'struct_declaration',
+          'enum_declaration',
+          'record_declaration',
+        ].includes(node.type)
+      ) {
+        walkTypeDecl(node);
+        continue;
+      }
+    }
+  }
+
+  walk(children(rootNode));
+
+  const fileType = detectGenericFileType({
+    relPath,
+    testPattern: /tests?\.cs$/i,
+    testDirRegex: /\/tests?\//,
+  });
+  const summary = genericSummary({ fileType, exports, signatures });
+  return { exports, imports, signatures, types, summary, fileType };
+}
+
 // ---------- dispatcher ----------
 
 export function analyzeGeneric(
@@ -741,6 +874,8 @@ export function analyzeGeneric(
       return analyzeCLike(ctx, { cpp: false });
     case 'cpp':
       return analyzeCLike(ctx, { cpp: true });
+    case 'csharp':
+      return analyzeCSharp(ctx);
     default:
       throw new Error(`analyzeGeneric: unsupported language ${language}`);
   }

@@ -45,6 +45,7 @@ const EXT_LANGUAGE: Record<string, Language> = {
   '.cxx': 'cpp',
   '.hpp': 'cpp',
   '.hxx': 'cpp',
+  '.cs': 'csharp',
 };
 
 export async function detectLanguages(
