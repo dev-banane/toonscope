@@ -20,6 +20,7 @@ export function isProbablySourceFile(
   if (['.js', '.jsx', '.mjs', '.cjs'].includes(ext))
     return languages.includes('javascript');
   if (ext === '.py') return languages.includes('python');
+  if (ext === '.go') return languages.includes('go');
   return false;
 }
 

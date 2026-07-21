@@ -82,7 +82,8 @@ export function sigToCompactString(
 
   const kindPrefix =
     sig.kind === 'getter' ? 'get ' : sig.kind === 'setter' ? 'set ' : '';
-  const arrow = language === 'python' ? '->' : '=>';
+  const arrow =
+    language === 'javascript' || language === 'typescript' ? '=>' : '->';
   const ret = sig.returnType ? ` ${arrow} ${sig.returnType}` : '';
   return `${kindPrefix}${asyncPrefix}${genStar}${baseName}(${paramsStr})${ret}`;
 }

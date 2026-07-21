@@ -12,13 +12,22 @@ import {
   parseSummaryTemplate,
 } from './extractors';
 import { analyzePython } from './python';
+import { analyzeGeneric } from './generic';
 import { parseFile } from './parser';
 
+const EXT_TO_LANGUAGE: Record<string, Language> = {
+  '.py': 'python',
+  '.ts': 'typescript',
+  '.tsx': 'typescript',
+  '.mts': 'typescript',
+  '.cts': 'typescript',
+  '.go': 'go',
+};
+
+const GENERIC_LANGUAGES = new Set<Language>(['go']);
+
 function languageForExt(ext: string): Language {
-  if (ext === '.py') return 'python';
-  if (ext === '.ts' || ext === '.tsx' || ext === '.mts' || ext === '.cts')
-    return 'typescript';
-  return 'javascript';
+  return EXT_TO_LANGUAGE[ext] ?? 'javascript';
 }
 
 export async function analyzeFile(params: {
@@ -40,6 +49,28 @@ export async function analyzeFile(params: {
 
     if (language === 'python') {
       const result = analyzePython({
+        rootNode,
+        absPath,
+        relPath,
+        projectRoot,
+        sourceText,
+      });
+      return {
+        path: relPath,
+        language,
+        type: result.fileType,
+        exports: result.exports,
+        imports: result.imports,
+        signatures: result.signatures,
+        types: result.types,
+        summary: result.summary,
+        contentHash,
+        lastAnalyzed,
+      };
+    }
+
+    if (GENERIC_LANGUAGES.has(language)) {
+      const result = analyzeGeneric(language, {
         rootNode,
         absPath,
         relPath,
