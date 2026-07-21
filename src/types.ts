@@ -1,4 +1,9 @@
-export type Language = 'typescript' | 'javascript' | 'python' | 'go';
+export type Language =
+  | 'typescript'
+  | 'javascript'
+  | 'python'
+  | 'go'
+  | 'rust';
 
 export interface ToonConfig {
   include: string[];

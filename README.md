@@ -224,10 +224,11 @@ real file at all.
 
 ## Languages supported
 
-TypeScript, JavaScript (including JSX/TSX), Python, and Go, with more
-planned. Import resolution follows relative paths and tsconfig/jsconfig
-`paths` aliases for TS/JS (nearest `tsconfig.json`/`jsconfig.json` walking
-up from each file), so multi-tsconfig monorepos resolve correctly.
+TypeScript, JavaScript (including JSX/TSX), Python, Go, and Rust, with
+more planned. Import resolution follows relative paths and
+tsconfig/jsconfig `paths` aliases for TS/JS (nearest
+`tsconfig.json`/`jsconfig.json` walking up from each file), and Rust's
+`crate::`/`self::`/`super::` paths for same-crate resolution.
 
 ## Performance
 

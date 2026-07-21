@@ -2,7 +2,13 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { Parser, Language, Tree } from 'web-tree-sitter';
 
-export type GrammarName = 'javascript' | 'typescript' | 'tsx' | 'python' | 'go';
+export type GrammarName =
+  | 'javascript'
+  | 'typescript'
+  | 'tsx'
+  | 'python'
+  | 'go'
+  | 'rust';
 
 const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   javascript: 'tree-sitter-javascript.wasm',
@@ -10,6 +16,7 @@ const WASM_FILE_BY_GRAMMAR: Record<GrammarName, string> = {
   tsx: 'tree-sitter-tsx.wasm',
   python: 'tree-sitter-python.wasm',
   go: 'tree-sitter-go.wasm',
+  rust: 'tree-sitter-rust.wasm',
 };
 
 const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
@@ -23,6 +30,7 @@ const GRAMMAR_BY_EXT: Record<string, GrammarName> = {
   '.tsx': 'tsx',
   '.py': 'python',
   '.go': 'go',
+  '.rs': 'rust',
 };
 
 export function grammarForFileExt(ext: string): GrammarName {

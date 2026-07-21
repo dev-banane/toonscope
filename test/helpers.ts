@@ -21,7 +21,7 @@ export function defaultTestConfig(projectRoot: string): ToonConfig {
     ],
     output: fs.mkdtempSync(path.join(os.tmpdir(), 'toonscope-test-')),
     defaultDepth: 2,
-    languages: ['typescript', 'javascript', 'python', 'go'],
+    languages: ['typescript', 'javascript', 'python', 'go', 'rust'],
     splitThreshold: 15,
   };
 }

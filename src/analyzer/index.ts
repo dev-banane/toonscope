@@ -22,9 +22,10 @@ const EXT_TO_LANGUAGE: Record<string, Language> = {
   '.mts': 'typescript',
   '.cts': 'typescript',
   '.go': 'go',
+  '.rs': 'rust',
 };
 
-const GENERIC_LANGUAGES = new Set<Language>(['go']);
+const GENERIC_LANGUAGES = new Set<Language>(['go', 'rust']);
 
 function languageForExt(ext: string): Language {
   return EXT_TO_LANGUAGE[ext] ?? 'javascript';

@@ -37,6 +37,7 @@ const EXT_LANGUAGE: Record<string, Language> = {
   '.cjs': 'javascript',
   '.py': 'python',
   '.go': 'go',
+  '.rs': 'rust',
 };
 
 export async function detectLanguages(
