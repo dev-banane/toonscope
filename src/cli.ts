@@ -25,6 +25,8 @@ import { startWatcher } from './watcher';
 import {
   createProgress,
   printConfigInfo,
+  printDebugFileEvent,
+  printDebugSystemInfo,
   printHeader,
   printNextSteps,
   printParseError,
@@ -33,6 +35,7 @@ import {
   printWatchEvent,
   type RenderOptions,
 } from './cli/renderer';
+import { gatherDebugSystemInfo } from './utils/debugInfo';
 import packageJson from '../package.json';
 import {
   applyIntegrationFiles,
@@ -222,6 +225,7 @@ async function runGenerate(params: {
   force?: boolean;
   gemini?: boolean;
   vault?: string;
+  debug?: boolean;
 }): Promise<{ ok: boolean; ctx?: ToonContext }> {
   const {
     projectRoot,
@@ -232,6 +236,7 @@ async function runGenerate(params: {
     force,
     gemini,
     vault,
+    debug,
   } = params;
   let config = params.config;
 
@@ -239,6 +244,22 @@ async function runGenerate(params: {
     console.log(`  Project root: ${projectRoot}`);
     if (!hasConfig) printNoConfigNote(projectRoot);
     console.log('');
+  }
+
+  if (debug) {
+    printDebugSystemInfo(
+      gatherDebugSystemInfo({
+        toonscopeVersion: packageJson.version,
+        projectRoot,
+        configPath: configPathLabel,
+        configSource: hasConfig ? 'file' : 'default',
+        include: config.include,
+        exclude: config.exclude,
+        languages: config.languages,
+        output: config.output,
+      }),
+      ro
+    );
   }
 
   if (summarize) {
@@ -329,6 +350,14 @@ async function runGenerate(params: {
     summarize,
     force,
     onParseProgress(current, total, file) {
+      if (debug) {
+        try {
+          const stat = fs.statSync(path.join(projectRoot, file));
+          printDebugFileEvent('read', file, `${stat.size} bytes`, ro);
+        } catch {
+          printDebugFileEvent('read', file, 'stat failed', ro);
+        }
+      }
       parseProgress.update(current, file);
       if (current >= total && !parseDone) {
         parseDone = true;
@@ -384,6 +413,14 @@ async function runGenerate(params: {
     const raw = readTextFile(absPath);
     const t = countTokens(raw);
     rawTokens += t;
+    if (debug) {
+      printDebugFileEvent(
+        'tokens',
+        relPath,
+        `${raw.length} chars -> ${t} tokens`,
+        ro
+      );
+    }
     if (t > largestRaw) {
       largestRaw = t;
       largestPath = relPath;
@@ -420,6 +457,16 @@ async function runGenerate(params: {
   ) as any;
   const depClusters = Object.keys(graphYaml?.clusters ?? {}).length;
   const outputFiles = countOutputFiles(outputDir);
+  if (debug) {
+    for (const f of listOutputFiles(outputDir)) {
+      printDebugFileEvent(
+        'write',
+        path.relative(projectRoot, f.path).split(path.sep).join('/'),
+        `${f.bytes} bytes`,
+        ro
+      );
+    }
+  }
   // graph.yaml only stores forward (`imports`) edges; derive "most
   // imported" (fan-in) by inverting them in memory.
   const importedByCounts = new Map<string, number>();
@@ -848,6 +895,10 @@ program
     '--vault <path>',
     'Write a memory .md file to this vault directory (e.g. ~/.claude/projects/.../memory)'
   )
+  .option(
+    '--debug',
+    'Print diagnostic info: hardware/software specs, resolved config, every file read/written, and per-file token counts. Useful for reporting scan differences between machines.'
+  )
   .action(async (opts) => {
     const ro = renderFlags(opts);
     try {
@@ -868,6 +919,7 @@ program
         force: Boolean(opts.force),
         gemini: Boolean(opts.gemini),
         vault: opts.vault,
+        debug: Boolean(opts.debug),
       });
       if (!result.ok) return;
       printNextSteps(ro);
@@ -1327,4 +1379,19 @@ function countOutputFiles(rootDir: string): number {
     }
   }
   return count;
+}
+
+function listOutputFiles(rootDir: string): { path: string; bytes: number }[] {
+  if (!fs.existsSync(rootDir)) return [];
+  const out: { path: string; bytes: number }[] = [];
+  const stack = [rootDir];
+  while (stack.length) {
+    const d = stack.pop()!;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) stack.push(p);
+      else out.push({ path: p, bytes: fs.statSync(p).size });
+    }
+  }
+  return out.sort((a, b) => a.path.localeCompare(b.path));
 }

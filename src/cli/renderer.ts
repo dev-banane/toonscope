@@ -205,7 +205,7 @@ export function printSummaryBox(
   });
   table.push(
     [
-      ctx.chalk.bold.green('🔭 Build complete'),
+      ctx.chalk.bold.green('Build complete'),
       ctx.chalk.dim(`${(stats.totalMs / 1000).toFixed(1)}s`),
     ],
     ['Files analyzed', String(stats.filesAnalyzed)],
@@ -304,6 +304,83 @@ export function printError(
   );
   if (detail) console.log(`    ${ctx.chalk.red(detail)}`);
   console.log(`    ${ctx.chalk.dim('Skipping file, continuing build...')}\n`);
+}
+
+export interface DebugSystemInfo {
+  toonscopeVersion: string;
+  nodeVersion: string;
+  platform: string;
+  osRelease: string;
+  arch: string;
+  cpuModel: string;
+  cpuCount: number;
+  totalMemGB: string;
+  freeMemGB: string;
+  locale: string;
+  caseSensitiveFs: boolean | 'unknown';
+  cwd: string;
+  projectRoot: string;
+  configPath: string;
+  configSource: 'file' | 'default';
+  include: string[];
+  exclude: string[];
+  languages: string[];
+  output: string;
+}
+
+export function printDebugSystemInfo(
+  info: DebugSystemInfo,
+  options?: RenderOptions
+): void {
+  const ctx = makeCtx(options);
+  if (ctx.json) return;
+  const dim = ctx.chalk.dim;
+  const label = (s: string) => ctx.chalk.bold(s.padEnd(20));
+  console.log(`  ${ctx.chalk.bold.magenta('── debug: system & config ──')}`);
+  console.log(`  ${label('toonscope')}${info.toonscopeVersion}`);
+  console.log(`  ${label('node')}${info.nodeVersion}`);
+  console.log(
+    `  ${label('platform')}${info.platform} ${info.osRelease} (${info.arch})`
+  );
+  console.log(`  ${label('cpu')}${info.cpuModel} x${info.cpuCount}`);
+  console.log(
+    `  ${label('memory')}${info.freeMemGB} GB free / ${info.totalMemGB} GB total`
+  );
+  console.log(`  ${label('locale')}${info.locale}`);
+  console.log(
+    `  ${label('case-sensitive fs')}${
+      info.caseSensitiveFs === 'unknown'
+        ? dim('could not determine')
+        : String(info.caseSensitiveFs)
+    }`
+  );
+  console.log(`  ${label('cwd')}${info.cwd}`);
+  console.log(`  ${label('project root')}${info.projectRoot}`);
+  console.log(
+    `  ${label('config')}${info.configPath} ${dim(`(${info.configSource})`)}`
+  );
+  console.log(`  ${label('include')}${info.include.join(', ')}`);
+  console.log(`  ${label('exclude')}${info.exclude.join(', ')}`);
+  console.log(`  ${label('languages')}${info.languages.join(', ')}`);
+  console.log(`  ${label('output')}${info.output}`);
+  console.log('');
+}
+
+export function printDebugFileEvent(
+  kind: 'read' | 'write' | 'tokens',
+  file: string,
+  detail: string,
+  options?: RenderOptions
+): void {
+  const ctx = makeCtx(options);
+  if (ctx.json) return;
+  const tag =
+    kind === 'read'
+      ? ctx.chalk.blue('[read] ')
+      : kind === 'write'
+        ? ctx.chalk.green('[write]')
+        : ctx.chalk.yellow('[tokens]');
+  console.log(`  ${tag} ${file} ${ctx.chalk.dim(detail)}`);
 }
 
 export function printNextSteps(options?: RenderOptions): void {
